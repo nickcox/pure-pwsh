@@ -65,10 +65,20 @@ function init() {
   $psrOptions = Get-PSReadlineOption
 
   if ($psrOptions) {
-    Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
-    Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
-    Set-PSReadLineOption -Colors @{ ContinuationPrompt = $psrOptions.EmphasisColor }
-    Set-PSReadLineOption -ExtraPromptLineCount 2
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'PromptText') {
+      Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
+    }
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
+      Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
+    }
+
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'Colors') {
+      Set-PSReadLineOption -Colors @{ ContinuationPrompt = $psrOptions.EmphasisColor }
+    }
+
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
+      Set-PSReadLineOption -ExtraPromptLineCount 2
+    }
   }
 }
 
