@@ -1,78 +1,55 @@
+Get-Job Pure__* | Where {S_.State -eq 'Completed' -or $_.State -eq 'Stopped'} | Remove-Job
+
 function asyncGitFetch() {
+  # return early if we've fetched recently
+  if (Get-Job Pure__* | Where PSBeginTime -ge ((Get-Date) - $pure.FetchPeriod)) {
+    return
+  }
+
+  # clean up any existing jobs
+  else {
+    Get-Job Pure__* |
+      Where {S_.State -eq 'Completed' -or $_.State -eq 'Stopped'} |
+      Remove-Job
+  }
+
+  # check that we're actually in a git directory
   if ($gitStatus = Get-GitStatus) {
 
-    if (Get-Job Pure__* | Where PSBeginTime -ge ((Get-Date).AddSeconds(-30))) {
-      return
-    }
-
-    else {
-      Get-Job Pure__* | Where State -eq Completed | Remove-Job
-      Get-Job Pure__* | Where State -eq Stopped   | Remove-Job
-    }
-
-    # get the before fetch state
-    $currentHead = Get-Content "$($gitStatus.GitDir)/FETCH_HEAD"
-
-    $null = Start-Job -Name "Pure__GitFetch"-ScriptBlock {
+    $null = Start-Job -Name "Pure__GitFetch" -ScriptBlock {
       param($gitDir, $currentHead)
 
-      git -C $gitDir fetch;
+      git -C $gitDir fetch
+      # no need to actually do anything here, if the status changed
+      # it should get picked up by the listener
 
-      $newHead = Get-Content "$gitDir/FETCH_HEAD"
-      $newHead -and ($newHead -ne $currentHead)
-    } -ArgumentList $gitStatus.GitDir, $currentHead
+    } -ArgumentList $gitStatus.GitDir
   }
 }
 
 $Script:UpdateOnChange = {
-  $state = $event.MessageData
-  $currentStatus = &($state.getCurrentStatus)
-
-  if (!$currentStatus.gitDir) {return}
-  if ($Event.SourceEventArgs.Name -eq '.git') {return}
-
-  $mutex = [System.Threading.Mutex]::new($false, ('pure__' + $currentStatus.gitDir -replace '[^\w]' , ''))
-  if (!$mutex.WaitOne(0)) {
-    &$state.log 'mutex unavailable'
-    return
-  }
-
   try {
+    $state = $event.MessageData
+    &$state.toggleWatcher $false # don't accept any new events while we process this one
+
+    if (
+      $Event.SourceEventArgs.Name -eq '.git' -or
+      $Event.SourceEventArgs.Name -like '.git*.lock') {return}
+
+    $currentStatus = &$state.currentStatus
+    if (!$currentStatus.gitDir) {return} # not a git directory
 
     $debounce = $pure.Debounce
-
     $timeSinceUpdate = (Get-Date) - $currentStatus.updated
-
     if ($timeSinceUpdate -le $debounce) {
-      &$state.log "Debounce not cleared ($debounce >= $timeSinceUpdate)."
       return
     }
 
-    &$state.log "Debounce clear ($debounce)."
+    $currentStatus.updated = Get-Date
     &$state.log "$($event.SourceEventArgs | ConvertTo-Json -Compress)"
-
-    Split-Path -Parent $currentStatus.gitDir | Push-Location
-
-    $newStatus = &$state.getNewStatus
-
-    &$state.log "new status: "
-    &$state.log "$($newStatus | ConvertTo-Json | ConvertTo-Json -Compress)"
-
-    &$state.log "old status: "
-    &$state.log "$($currentStatus | ConvertTo-Json | ConvertTo-Json -Compress)"
-
-    if ($currentStatus -and ($newStatus)) {
-      if (
-        ($newStatus.isDirty -ne $promptStatus.isDirty) -or
-        ($newStatus.isAhead -ne $promptStatus.isAhead) -or
-        ($newStatus.isBehind -ne $promptStatus.isBehind)) {
-
-        &$state.log 'updating prompt from update'
-        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-      }
-    }
+    &$state.writePromptIfChanged
   }
   finally {
-    $mutex.ReleaseMutex()
+    &$state.toggleWatcher $true
   }
 }

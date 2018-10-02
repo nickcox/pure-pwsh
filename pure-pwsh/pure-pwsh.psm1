@@ -1,13 +1,10 @@
 ﻿. $PSScriptRoot/prompt.ps1
 . $PSScriptRoot/async.ps1
 
-$Global:log = @('')
-
 function Log($message) {
-  $Global:log += "{0}: {1}" -f (Get-Date).TimeOfDay, $message
+  if ((Get-Variable pure) -and ($pure | Get-Member _logger)) { &$pure._logger $message }
+  else { Write-Verbose $message }
 }
-
-Log "Starting..."
 
 filter color {$_.Split('*')[0]} # the part from '*' on is only for `$pure` display
 
@@ -28,6 +25,24 @@ function getPromptStatus($gitStatus) {
     isAhead  = ($status.AheadBy -gt 0)
     isBehind = ($status.BehindBy -gt 0)
     gitDir   = $status.GitDir
+  }
+}
+
+$Script:timer = New-Object System.Timers.Timer -Property @{ Interval = 1000; AutoReset = $false }
+Register-ObjectEvent $timer Elapsed -Action { [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt() }
+
+function writePromptIfChanged() {
+  $newStatus = getPromptStatus (Get-GitStatus)
+
+  if ($promptStatus -and ($newStatus)) {
+    if (
+      ($newStatus.isDirty -ne $promptStatus.isDirty) -or
+      ($newStatus.isAhead -ne $promptStatus.isAhead) -or
+      ($newStatus.isBehind -ne $promptStatus.isBehind)) {
+
+      Log 'updating prompt from update'
+      $Script:timer.Start()
+    }
   }
 }
 
@@ -83,27 +98,36 @@ function init() {
 }
 
 $Global:pure = [ordered]@{
-  PwdColor    = valueOrDefault $psrOptions.CommentColor "32m"
-  BranchColor = valueOrDefault $psrOptions.StringColor "36m"
-  RemoteColor = valueOrDefault $psrOptions.TypeColor "37m"
-  ErrorColor  = valueOrDefault $psrOptions.ErrorColor "91m"
-  PromptColor = valueOrDefault $psrOptions.EmphasisColor "96m"
-  PromptChar  = '❯'
-  UpChar      = '⇡'
-  DownChar    = '⇣'
-  Debounce    = [timespan]::FromSeconds(2)
-  FetchPeriod = [timespan]::FromSeconds(300)
+  PwdColor             = valueOrDefault $psrOptions.CommentColor "32m"
+  BranchColor          = valueOrDefault $psrOptions.StringColor "36m"
+  RemoteColor          = valueOrDefault $psrOptions.TypeColor "37m"
+  ErrorColor           = valueOrDefault $psrOptions.ErrorColor "91m"
+  PromptColor          = valueOrDefault $psrOptions.EmphasisColor "96m"
+  PromptChar           = '❯'
+  UpChar               = '⇡'
+  DownChar             = '⇣'
+  SlowCommandThreshold = [timespan]::FromSeconds(5)
+  FetchPeriod          = [timespan]::FromSeconds(300)
+  Debounce             = [timespan]::FromSeconds(1)
 }
 
-$Global:promptStatus = getPromptStatus $emptyStatus
+$Script:promptStatus = getPromptStatus $emptyStatus
 
-$Global:watcher = [IO.FileSystemWatcher]::new()
+$Script:watcher = [IO.FileSystemWatcher]::new()
 $watcher.Path = (Get-Location).Path
 $watcher.IncludeSubdirectories = $true
 
-$Script:watchEvent = Register-ObjectEvent -InputObject $watcher -EventName Changed -Action $updateOnChange -MessageData @{
-  getNewStatus     = {getPromptStatus (& {Get-GitStatus})}
-  getCurrentStatus = {$Global:promptStatus}
-  log              = {Log @args}
+function registerWatcherEvent($eventName) {
+  Register-ObjectEvent -InputObject $watcher -EventName $eventName -Action $updateOnChange -MessageData @{
+    getNewStatus         = {getPromptStatus (& {Get-GitStatus})}
+    currentStatus        = {$promptStatus}
+    log                  = {Log @args}
+    writePromptIfChanged = {writePromptIfChanged}
+    toggleWatcher        = {$watcher.EnableRaisingEvents = $args[0] }
+  }
 }
+
+$null = registerWatcherEvent Changed
+$null = registerWatcherEvent Deleted
+
 init
