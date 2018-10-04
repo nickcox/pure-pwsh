@@ -1,4 +1,4 @@
-Get-Job Pure__* | Where {S_.State -eq 'Completed' -or $_.State -eq 'Stopped'} | Remove-Job
+Get-Job Pure__* | Where {$_.State -eq 'Completed' -or $_.State -eq 'Stopped'} | Remove-Job
 
 function asyncGitFetch() {
   # return early if we've fetched recently
@@ -9,7 +9,7 @@ function asyncGitFetch() {
   # clean up any existing jobs
   else {
     Get-Job Pure__* |
-      Where {S_.State -eq 'Completed' -or $_.State -eq 'Stopped'} |
+      Where {$_.State -eq 'Completed' -or $_.State -eq 'Stopped'} |
       Remove-Job
   }
 

@@ -1,6 +1,6 @@
 @{
   RootModule        = 'pure-pwsh.psm1'
-  ModuleVersion     = '0.1.3'
+  ModuleVersion     = '0.1.4'
   GUID              = '94d168c3-c48f-4937-bc82-4d54b5b9e777'
 
   Author            = 'Nick Cox'
