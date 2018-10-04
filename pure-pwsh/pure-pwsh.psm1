@@ -17,14 +17,16 @@ $emptyStatus = @{
   BehindBy   = 0
 }
 
-function getPromptStatus($gitStatus) {
+function getPromptStatus($gitStatus, [bool]$isAsync) {
   $status = $gitStatus |??? $emptyStatus
   return [ordered]@{
-    updated  = if ($gitStatus) {Get-Date} else {[DateTime]::MinValue}
-    isDirty  = ($status.HasWorking -or $status.HasIndex)
-    isAhead  = ($status.AheadBy -gt 0)
-    isBehind = ($status.BehindBy -gt 0)
-    gitDir   = $status.GitDir
+    updated     = if ($gitStatus) {Get-Date} else {[DateTime]::MinValue}
+    isDirty     = ($status.HasWorking -or $status.HasIndex)
+    isAhead     = ($status.AheadBy -gt 0)
+    isBehind    = ($status.BehindBy -gt 0)
+    gitDir      = $status.GitDir
+    repoChanged = $status.GitDir -ne $promptStatus.gitDir
+    isAsync     = $isAsync
   }
 }
 
@@ -32,7 +34,8 @@ $Script:timer = New-Object System.Timers.Timer -Property @{ Interval = 1000; Aut
 Register-ObjectEvent $timer Elapsed -Action { [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt() }
 
 function writePromptIfChanged() {
-  $newStatus = getPromptStatus (Get-GitStatus)
+  $Script:promptStatus.updated = Get-Date
+  $newStatus = getPromptStatus (Get-GitStatus) $true
 
   if ($promptStatus -and ($newStatus)) {
     if (
@@ -40,7 +43,8 @@ function writePromptIfChanged() {
       ($newStatus.isAhead -ne $promptStatus.isAhead) -or
       ($newStatus.isBehind -ne $promptStatus.isBehind)) {
 
-      Log 'updating prompt from update'
+      Log 'updating prompt'
+      $Script:promptStatus = $newStatus
       $Script:timer.Start()
     }
   }
@@ -73,7 +77,7 @@ function Set-PureOption() {
 
 function valueOrDefault($value, $default) {
   "$(if ($value) {$value} else {"$([char]27)[$default"})" +
-  "*$([char]27)[0m"
+  "*$([char]27)[0m" # append an aster and reset the colour for display purposes
 }
 
 function init() {
@@ -119,11 +123,10 @@ $watcher.IncludeSubdirectories = $true
 
 function registerWatcherEvent($eventName) {
   Register-ObjectEvent -InputObject $watcher -EventName $eventName -Action $updateOnChange -MessageData @{
-    getNewStatus         = {getPromptStatus (& {Get-GitStatus})}
-    currentStatus        = {$promptStatus}
     log                  = {Log @args}
+    currentStatus        = {$promptStatus}
     writePromptIfChanged = {writePromptIfChanged}
-    toggleWatcher        = {$watcher.EnableRaisingEvents = $args[0] }
+    toggleWatcher        = {$watcher.EnableRaisingEvents = $args[0]}
   }
 }
 

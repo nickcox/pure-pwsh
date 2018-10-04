@@ -39,13 +39,11 @@ $Script:UpdateOnChange = {
     $currentStatus = &$state.currentStatus
     if (!$currentStatus.gitDir) {return} # not a git directory
 
-    $debounce = $pure.Debounce
     $timeSinceUpdate = (Get-Date) - $currentStatus.updated
-    if ($timeSinceUpdate -le $debounce) {
+    if ($timeSinceUpdate -le $pure.Debounce) {
       return
     }
 
-    $currentStatus.updated = Get-Date
     &$state.log "$($event.SourceEventArgs | ConvertTo-Json -Compress)"
     &$state.writePromptIfChanged
   }

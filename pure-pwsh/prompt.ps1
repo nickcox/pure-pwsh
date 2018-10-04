@@ -2,6 +2,8 @@ function global:prompt {
   $isError = !$?
   $Script:timer.Stop() # if we have a pending redraw, cancel it now
 
+  $startTime = Get-Date
+
   $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
   if ($curPath.ToLower().StartsWith($Home.ToLower())) {
     $curPath = "~" + $curPath.SubString($Home.Length)
@@ -9,15 +11,21 @@ function global:prompt {
 
   $prompt = "`n{0}$curPath " -f ($pure.pwdColor | color)
 
-  $gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null}
-  if ($gitStatus) {
+  if (
+    $promptStatus.isAsync -or
+    ($gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})
+  ) {
 
-    $watcher.Path = git rev-parse --show-toplevel
-    $watcher.EnableRaisingEvents = $true
+    if ($promptStatus.repoChanged) {
+      $watcher.Path = git rev-parse --show-toplevel
+      $watcher.EnableRaisingEvents = $true
+    }
 
     if ($pure.FetchPeriod -gt 0) { asyncGitFetch }
 
-    $Script:promptStatus = getPromptStatus $gitStatus
+    if (!$promptStatus.isAsync) {
+      $Script:promptStatus = getPromptStatus $gitStatus
+    }
     $prompt += "{0}$($gitStatus.branch)" -f $($pure.branchColor | color)
     if ($promptStatus.isDirty) {
       $prompt += "*"
@@ -46,4 +54,7 @@ function global:prompt {
   $promptColor = if ($isError) {$pure.errorColor} else {$pure.PromptColor}
   $prompt += "`n{0}$($pure.PromptChar) " -f ($promptColor | color)
   $prompt
+
+  $endTime = (Get-Date) - $startTime
+  Log $endTime.TotalMilliseconds
 }
