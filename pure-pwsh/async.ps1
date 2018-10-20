@@ -1,3 +1,4 @@
+# kill any existing jobs on startup
 Get-Job Pure__* | Where {$_.State -eq 'Completed' -or $_.State -eq 'Stopped'} | Remove-Job
 
 function asyncGitFetch() {
@@ -17,11 +18,11 @@ function asyncGitFetch() {
   if ($gitStatus = Get-GitStatus) {
 
     $null = Start-Job -Name "Pure__GitFetch" -ScriptBlock {
-      param($gitDir, $currentHead)
+      param($gitDir)
 
       git -C $gitDir fetch
-      # no need to actually do anything here, if the status changed
-      # it should get picked up by the listener
+      # no need to actually do anything here. if the status changed
+      # then it should get picked up by the listener
 
     } -ArgumentList $gitStatus.GitDir
   }
@@ -49,5 +50,22 @@ $Script:UpdateOnChange = {
   }
   finally {
     &$state.toggleWatcher $true
+  }
+}
+
+function writePromptIfChanged() {
+  $Script:promptStatus.updated = Get-Date
+  $newStatus = getPromptStatus (Get-GitStatus)
+
+  if ($promptStatus -and ($newStatus)) {
+    if (
+      ($newStatus.isDirty -ne $promptStatus.isDirty) -or
+      ($newStatus.isAhead -ne $promptStatus.isAhead) -or
+      ($newStatus.isBehind -ne $promptStatus.isBehind)) {
+
+      Log 'updating prompt'
+      $Script:promptStatus = $newStatus
+      $Script:timer.Start()
+    }
   }
 }

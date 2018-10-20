@@ -4,57 +4,79 @@ function global:prompt {
 
   $startTime = Get-Date
 
-  $curPath = $ExecutionContext.SessionState.Path.CurrentLocation.Path
+  $hasRepoChanged = !($PWD.Path -eq $watcher.Path -or (
+      $watcher.EnableRaisingEvents -and ($PWD.Path -like "$($watcher.Path)*")))
+
+  $curPath = $PWD.Path
   if ($curPath.ToLower().StartsWith($Home.ToLower())) {
     $curPath = "~" + $curPath.SubString($Home.Length)
   }
 
-  $prompt = "`n{0}$curPath " -f ($pure.pwdColor | color)
+  $prompt = "`n"
+  $prompt += "$curPath " | fmtColor $pure.pwdColor
 
-  if (
-    $promptStatus.isAsync -or
-    ($gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})
-  ) {
+  if (!$hasRepoChanged -and $promptStatus.gitDir -or (
+      $gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})) {
 
-    if ($promptStatus.repoChanged) {
-      $watcher.Path = git rev-parse --show-toplevel
+    if ($hasRepoChanged -or !$watcher.EnableRaisingEvents) {
+      Log 'Updating watched repo'
+      $watcher.Path = git rev-parse --show-toplevel | Resolve-Path
       $watcher.EnableRaisingEvents = $true
+      $Script:promptStatus = getPromptStatus $gitStatus
     }
 
     if ($pure.FetchPeriod -gt 0) { asyncGitFetch }
 
-    if (!$promptStatus.isAsync) {
-      $Script:promptStatus = getPromptStatus $gitStatus
-    }
-    $prompt += "{0}$($gitStatus.branch)" -f $($pure.branchColor | color)
-    if ($promptStatus.isDirty) {
-      $prompt += "*"
-    }
+    $dirtyMark = if ($promptStatus.isDirty) { "*" } else { "" }
+    $prompt += ($promptStatus.branch + $dirtyMark) | fmtColor $pure.branchColor
     $prompt += " "
+
     if ($promptStatus.isBehind) {
-      $prompt += "{0}$($pure.downChar)" -f ($pure.remoteColor | color)
+      $prompt += $pure.downChar | fmtColor $pure.remoteColor
     }
 
     if ($promptStatus.isAhead) {
-      $prompt += "{0}$($pure.upChar)" -f ($pure.remoteColor | color)
+      $prompt += $pure.upChar | fmtColor $pure.remoteColor
     }
   }
 
   else {
+    $watcher.Path = $PWD
     $watcher.EnableRaisingEvents = $false
+    $Script:promptStatus = getPromptStatus $null
   }
 
   if ($lastCmd = Get-History -Count 1) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
-    if ($diff -gt $pure.SlowCommandThreshold) {
-      $prompt += "{0} ($("{0:f2}" -f $diff.TotalSeconds)s)" -f ($pure.errorColor | color)
+    if ($diff -gt $pure.SlowCommandTime) {
+      $prompt += " ($("{0:f2}" -f $diff.TotalSeconds)s)" | fmtColor $pure.errorColor
     }
   }
 
   $promptColor = if ($isError) {$pure.errorColor} else {$pure.PromptColor}
-  $prompt += "`n{0}$($pure.PromptChar) " -f ($promptColor | color)
+  $prompt += "`n"
+  $prompt += "`n$($pure.PromptChar) " | fmtColor $promptColor
   $prompt
 
   $endTime = (Get-Date) - $startTime
   Log $endTime.TotalMilliseconds
+}
+
+$emptyStatus = @{
+  HasWorking = $false
+  HasIndex   = $false
+  AheadBy    = 0
+  BehindBy   = 0
+}
+
+function getPromptStatus($gitStatus) {
+  $status = $gitStatus |??? $emptyStatus
+  return [ordered]@{
+    updated  = if ($gitStatus) {Get-Date} else {[DateTime]::MinValue}
+    isDirty  = ($status.HasWorking -or $status.HasIndex)
+    isAhead  = ($status.AheadBy -gt 0)
+    isBehind = ($status.BehindBy -gt 0)
+    gitDir   = $status.GitDir
+    branch   = $status.Branch
+  }
 }
