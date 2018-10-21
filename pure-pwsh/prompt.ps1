@@ -25,7 +25,7 @@ function global:prompt {
       $Script:promptStatus = getPromptStatus $gitStatus
     }
 
-    if ($pure.FetchPeriod -gt 0) { asyncGitFetch }
+    if ($pure.FetchInterval -gt 0) { asyncGitFetch }
 
     $dirtyMark = if ($promptStatus.isDirty) { "*" } else { "" }
     $prompt += ($promptStatus.branch + $dirtyMark) | fmtColor $pure.branchColor
@@ -55,7 +55,7 @@ function global:prompt {
 
   $promptColor = if ($isError) {$pure.errorColor} else {$pure.PromptColor}
   $prompt += "`n"
-  $prompt += "`n$($pure.PromptChar) " | fmtColor $promptColor
+  $prompt += "$($pure.PromptChar) " | fmtColor $promptColor
   $prompt
 
   $endTime = (Get-Date) - $startTime

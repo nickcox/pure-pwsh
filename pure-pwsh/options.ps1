@@ -60,7 +60,7 @@ function initOptions() {
       UpChar          = '⇡'
       DownChar        = '⇣'
       SlowCommandTime = [timespan]::FromSeconds(5.0)
-      FetchPeriod     = [timespan]::FromSeconds(300)
+      FetchInterval   = [timespan]::FromSeconds(300)
       Debounce        = [timespan]::FromSeconds(0.5)
     })
 }

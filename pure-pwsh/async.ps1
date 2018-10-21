@@ -3,7 +3,7 @@ Get-Job Pure__* | Where {$_.State -eq 'Completed' -or $_.State -eq 'Stopped'} | 
 
 function asyncGitFetch() {
   # return early if we've fetched recently
-  if (Get-Job Pure__* | Where PSBeginTime -ge ((Get-Date) - $pure.FetchPeriod)) {
+  if (Get-Job Pure__* | Where PSBeginTime -ge ((Get-Date) - $pure.FetchInterval)) {
     return
   }
 
