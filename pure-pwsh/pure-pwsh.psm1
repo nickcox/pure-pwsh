@@ -20,6 +20,7 @@ function registerWatcherEvent($eventName) {
     currentStatus        = {$promptStatus}
     writePromptIfChanged = {writePromptIfChanged}
     toggleWatcher        = {$watcher.EnableRaisingEvents = $args[0]}
+    backoff              = {$Script:backoff}
   }
 }
 
@@ -35,3 +36,4 @@ $null = registerWatcherEvent Deleted
 
 initOptions
 $Script:promptStatus = getPromptStatus $emptyStatus
+$Script:backoff = $pure.Debounce

@@ -1,6 +1,7 @@
 function global:prompt {
   $isError = !$?
   $Script:timer.Stop() # if we have a pending redraw, cancel it now
+  $Script:backoff = $pure.Debounce
 
   $startTime = Get-Date
 

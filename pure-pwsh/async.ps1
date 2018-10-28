@@ -41,7 +41,7 @@ $Script:UpdateOnChange = {
     if (!$currentStatus.gitDir) {return} # not a git directory
 
     $timeSinceUpdate = (Get-Date) - $currentStatus.updated
-    if ($timeSinceUpdate -le $pure.Debounce) {
+    if ($timeSinceUpdate -le (&$state.backoff)) {
       return
     }
 
@@ -54,6 +54,7 @@ $Script:UpdateOnChange = {
 }
 
 function writePromptIfChanged() {
+  $Script:backoff = $Script:backoff + $Script:backoff
   $Script:promptStatus.updated = Get-Date
   $newStatus = getPromptStatus (Get-GitStatus)
 
