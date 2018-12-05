@@ -29,32 +29,27 @@ function asyncGitFetch() {
 }
 
 $Script:UpdateOnChange = {
-  try {
-    $state = $event.MessageData
-    &$state.toggleWatcher $false # don't accept any new events while we process this one
+  if (
+    $Event.SourceEventArgs.Name -eq '.git' -or
+    $Event.SourceEventArgs.Name -like '.git*.lock') {return}
 
-    if (
-      $Event.SourceEventArgs.Name -eq '.git' -or
-      $Event.SourceEventArgs.Name -like '.git*.lock') {return}
+  $state = $event.MessageData
+  &$state.maybeDirty = $true
 
-    $currentStatus = &$state.currentStatus
-    if (!$currentStatus.gitDir) {return} # not a git directory
+  $currentStatus = &$state.currentStatus
+  if (!$currentStatus.gitDir) {return} # not a git directory
 
-    $timeSinceUpdate = (Get-Date) - $currentStatus.updated
-    if ($timeSinceUpdate -le (&$state.backoff)) {
-      return
-    }
-
-    &$state.log "$($event.SourceEventArgs | ConvertTo-Json -Compress)"
-    &$state.writePromptIfChanged
+  $timeSinceUpdate = (Get-Date) - $currentStatus.updated
+  if ($timeSinceUpdate.TotalMilliseconds -le (&$state.backoff)) {
+    return
   }
-  finally {
-    &$state.toggleWatcher $true
-  }
+
+  &$state.log "$($event.SourceEventArgs | ConvertTo-Json -Compress)"
+  &$state.writePromptIfChanged
 }
 
 function writePromptIfChanged() {
-  $Script:backoff = $Script:backoff + $Script:backoff
+  $Script:backoff = [Math]::Min($Script:backoff * 2, 10000)
   $Script:promptStatus.updated = Get-Date
   $newStatus = getPromptStatus (Get-GitStatus)
 
@@ -66,6 +61,7 @@ function writePromptIfChanged() {
 
       Log 'updating prompt'
       $Script:promptStatus = $newStatus
+      $Script:maybeDirty = $false
       $Script:timer.Start()
     }
   }

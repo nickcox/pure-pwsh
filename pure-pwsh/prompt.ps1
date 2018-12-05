@@ -1,7 +1,6 @@
 function global:prompt {
   $isError = !$?
   $Script:timer.Stop() # if we have a pending redraw, cancel it now
-  $Script:backoff = $pure.Debounce
 
   $startTime = Get-Date
 
@@ -16,15 +15,17 @@ function global:prompt {
   $prompt = "`n"
   $prompt += "$curPath " | fmtColor $pure.pwdColor
 
-  if (!$hasRepoChanged -and $promptStatus.gitDir -or (
+  if ((!$maybeDirty -and !$hasRepoChanged -and $promptStatus.gitDir) -or (
       $gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})) {
 
     if ($hasRepoChanged -or !$watcher.EnableRaisingEvents) {
       Log 'Updating watched repo'
+
       $watcher.Path = git rev-parse --show-toplevel | Resolve-Path
       $watcher.EnableRaisingEvents = $true
-      $Script:promptStatus = getPromptStatus $gitStatus
     }
+
+    if ($gitStatus) { $Script:promptStatus = getPromptStatus $gitStatus }
 
     if ($pure.FetchInterval -gt 0) { asyncGitFetch }
 
@@ -59,6 +60,8 @@ function global:prompt {
   $prompt += "$($pure.PromptChar) " | fmtColor $promptColor
   $prompt
 
+  $Script:maybeDirty = $false
+  $Script:backoff = $pure.DebounceMs
   $endTime = (Get-Date) - $startTime
   Log $endTime.TotalMilliseconds
 }

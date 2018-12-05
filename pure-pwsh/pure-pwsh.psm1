@@ -10,7 +10,7 @@ filter fmtColor($color) {$color.Split('*')[0] + $_ + "$esc[0m"}
 filter ???($default) {if ($_) {$_} else {$default}}
 
 function Log($message) {
-  if ((Get-Variable pure) -and ($pure | Get-Member _logger)) { &$pure._logger $message }
+  if ((Get-Variable pure -ErrorAction Ignore) -and ($pure | Get-Member _logger)) { &$pure._logger $message }
   else { Write-Verbose $message }
 }
 
@@ -19,12 +19,12 @@ function registerWatcherEvent($eventName) {
     log                  = {Log @args}
     currentStatus        = {$promptStatus}
     writePromptIfChanged = {writePromptIfChanged}
-    toggleWatcher        = {$watcher.EnableRaisingEvents = $args[0]}
     backoff              = {$Script:backoff}
+    maybeDirty           = {$Script:maybeDirty}
   }
 }
 
-$Script:timer = New-Object System.Timers.Timer -Property @{ Interval = 1000; AutoReset = $false }
+$Script:timer = New-Object System.Timers.Timer -Property @{ Interval = 1500; AutoReset = $false }
 Register-ObjectEvent $timer Elapsed -Action { [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt() }
 
 $Global:watcher = [IO.FileSystemWatcher]::new()
@@ -36,4 +36,7 @@ $null = registerWatcherEvent Deleted
 
 initOptions
 $Script:promptStatus = getPromptStatus $emptyStatus
-$Script:backoff = $pure.Debounce
+$Script:backoff = $pure.DebounceMs
+$Script:maybeDirty = $true
+
+Log "Initial status: " $promptStatus.Values

@@ -61,6 +61,6 @@ function initOptions() {
       DownChar        = '⇣'
       SlowCommandTime = [timespan]::FromSeconds(5.0)
       FetchInterval   = [timespan]::FromSeconds(300)
-      Debounce        = [timespan]::FromSeconds(0.5)
+      DebounceMs      = 500
     })
 }
