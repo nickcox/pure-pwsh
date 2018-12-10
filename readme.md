@@ -18,11 +18,11 @@ Set options on the `$pure` global.
 
 | Option                | Description                                            | Default value                                       |
 | :-------------------- | :----------------------------------------------------- | :-------------------------------------------------- |
-| **`PwdColor`**        | Colour of the current directory name.                  | <img src="https://placehold.it/16/00aa00?text=+" /> |
-| **`BranchColor`**     | Colour of the current branch.                          | <img src="https://placehold.it/16/00aaaa?text=+" /> |
-| **`RemoteColor`**     | Colour for remote status (up and down arrows).         | <img src="https://placehold.it/16/555555?text=+" /> |
-| **`ErrorColor`**      | Colour for the error prompt and long running commands. | <img src="https://placehold.it/16/ff5555?text=+" /> |
-| **`PromptColor`**     | Colour for the main prompt.                            | <img src="https://placehold.it/16/55ffff?text=+" /> |
+| **`PwdColor`**        | Colour of the current directory name.                  | <img src="https://placehold.it/16/0000aa?text=+" /> |
+| **`BranchColor`**     | Colour of the current branch.                          | <img src="https://placehold.it/16/aaaaaa?text=+" /> |
+| **`RemoteColor`**     | Colour for remote status (up and down arrows).         | <img src="https://placehold.it/16/00aaaa?text=+" /> |
+| **`ErrorColor`**      | Colour for the error prompt and long running commands. | <img src="https://placehold.it/16/aa0000?text=+" /> |
+| **`PromptColor`**     | Colour for the main prompt.                            | <img src="https://placehold.it/16/aa00aa?text=+" /> |
 | **`PromptChar`**      | Prompt character.                                      | `❯`                                                 |
 | **`UpChar`**          | Up arrow.                                              | `⇡`                                                 |
 | **`DownChar`**        | Down arrow.                                            | `⇣`                                                 |

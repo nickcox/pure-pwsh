@@ -51,11 +51,11 @@ function initOptions() {
 
   $Global:pure = New-Object PSObject -Property (
     [ordered]@{
-      PwdColor        = ansiSequence ($psrOptions.CommentColor |??? "32m")
-      BranchColor     = ansiSequence ($psrOptions.StringColor |??? "36m")
-      RemoteColor     = ansiSequence ($psrOptions.OperatorColor |??? "37m")
-      ErrorColor      = ansiSequence ($psrOptions.ErrorColor |??? "91m")
-      PromptColor     = ansiSequence ($psrOptions.EmphasisColor |??? "96m")
+      PwdColor        = ansiSequence ("34m")
+      BranchColor     = ansiSequence ("90m")
+      RemoteColor     = ansiSequence ("36m")
+      ErrorColor      = ansiSequence ("91m")
+      PromptColor     = ansiSequence ("35m")
       PromptChar      = '❯'
       UpChar          = '⇡'
       DownChar        = '⇣'
