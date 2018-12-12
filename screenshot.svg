@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" 
+  xmlns:xlink="http://www.w3.org/1999/xlink" width="840" height="494.2">
+  <rect width="840" height="494.2" rx="5" ry="5" class="a"/>
+  <svg y="0%" x="0%">
+    <circle cx="20" cy="20" r="6" fill="#ff5f58"/>
+    <circle cx="40" cy="20" r="6" fill="#ffbd2e"/>
+    <circle cx="60" cy="20" r="6" fill="#18c132"/>
+  </svg>
+  <svg height="434.2" viewBox="0 0 80 43.42" width="800" x="15" 
+    xmlns="http://www.w3.org/2000/svg" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" y="50">
+    <style>
+		.f{fill:#5555ff}
+		.g{fill:#ff55ff}
+		.h{fill:#bbbbbb}
+		.k{fill:#b9c0cb}
+		.l{fill:#f40e17}
+		.remote{fill:#6ae3fa}
+		.keyword{fill:#1dd03b}
+		.command{fill:#edc809}
+		.text{fill:#ffffff}
+    </style>
+    <g font-size="1.67" font-family="Hack,Consolas,Menlo,'Bitstream Vera Sans Mono','Powerline Symbols',monospace">
+      <defs>
+        <symbol id="1">
+          <text y="1.67" class="f">~</text>
+        </symbol>
+        <symbol id="2">
+          <text y="1.67" class="f">~\projects\pure-pwsh</text>
+          <text x="21.042" y="1.67" class="h">master</text>
+          <text x="28.056" y="1.67" class="remote">⇡</text>
+        </symbol>
+        <symbol id="a">
+          <path fill="transparent" d="M0 0h80v21H0z"/>
+        </symbol>
+        <symbol id="b">
+          <path fill="#6f7683" d="M0 0h1.102v2.171H0z"/>
+        </symbol>
+      </defs>
+      <path class="a" d="M0 0h80v43.42H0z"/>
+      <svg width="80">
+        <svg>
+          <use xlink:href="#a"/>
+          <use xlink:href="#b" x="1.996" y="36.882"/>
+          <use xlink:href="#1"/>
+          <text y="3.841" class="g">❯</text>
+          <text x="2.004" y="3.841" class="keyword">throw</text>
+          <text y="6.012" class="l">OperationStopped:</text>
+          <text x="18.036" y="6.012" class="l">(:)</text>
+          <text x="22.044" y="6.012" class="l">[],</text>
+          <text x="26.052" y="6.012" class="l">RuntimeException</text>
+          <use xlink:href="#1" y="8.684"/>
+          <text y="12.525" class="l">❯</text>
+          <text x="2.004" y="12.525" class="command">sleep</text>
+          <text x="8.016" y="12.525" class="k">-Seconds</text>
+          <text x="17.034" y="12.525" class="text">5</text>
+          <text y="16.867" class="f">~</text>
+          <text x="3.006" y="16.867" class="l">(5.00s)</text>
+          <text y="19.038" class="g">❯</text>
+          <text x="2.004" y="19.038" class="command">cd</text>
+          <text x="5.01" y="19.038" class="text">~\projects\pure-pwsh\</text>
+          <use xlink:href="#2" y="21.71"/>
+          <text y="25.551" class="g">❯</text>
+          <text x="2.004" y="25.551" class="command">ac</text>
+          <text x="5.01" y="25.551" class="text">dirty</text>
+          <text x="11.022" y="25.551" class="text">.</text>
+          <text y="29.893" class="f">~\projects\pure-pwsh</text>
+          <text x="21.042" y="29.893" class="h">master*</text>
+          <text x="29.058" y="29.893" class="remote">⇡</text>
+          <text y="32.064" class="g">❯</text>
+          <text x="2.004" y="32.064" class="command">rm</text>
+          <text x="5.01" y="32.064" class="text">dirty</text>
+          <use xlink:href="#2" y="34.736"/>
+          <text y="38.577" class="g">❯</text>
+        </svg>
+      </svg>
+    </g>
+  </svg>
+</svg>

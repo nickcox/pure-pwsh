@@ -2,7 +2,7 @@
 
 > PowerShell implementation of the [pure prompt](https://github.com/sindresorhus/pure).
 
-<img src="screenshot.png" width="840">
+![](screenshot.svg)
 
 ## Dependencies
 
