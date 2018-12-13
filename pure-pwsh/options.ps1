@@ -53,7 +53,7 @@ function initOptions() {
         }
     }
 
-    $id = {$input}
+    $id = {$args}
 
     $Global:pure = New-Object PSObject -Property (
         [ordered]@{
@@ -68,7 +68,7 @@ function initOptions() {
             SlowCommandTime = [timespan]::FromSeconds(5.0)
             FetchInterval   = [timespan]::FromSeconds(300)
             BranchFormatter = $id
-            PwdFormatter    = $id
+            PwdFormatter    = {$args -replace [Regex]::Escape($HOME), '~'}
             DebounceMs      = 500
         })
 }

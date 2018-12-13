@@ -7,16 +7,8 @@ function global:prompt {
     $hasRepoChanged = !($PWD.Path -eq $watcher.Path -or (
             $watcher.EnableRaisingEvents -and ($PWD.Path -like "$($watcher.Path)*")))
 
-    $curPath =
-    if ($PWD.Path.StartsWith($Home, [StringComparison]::OrdinalIgnoreCase)) {
-        "~" + $PWD.Path.SubString($Home.Length)
-    }
-    else {
-        $PWD.Path
-    }
-
     $prompt = "`n"
-    $prompt += "$curPath" | &$pure.PwdFormatter | fmtColor $pure.pwdColor
+    $prompt += &$pure.PwdFormatter $PWD.Path | fmtColor $pure.pwdColor
 
     if ((!$maybeDirty -and !$hasRepoChanged -and $promptStatus.gitDir) -or (
             $gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})) {
@@ -33,7 +25,7 @@ function global:prompt {
         if ($pure.FetchInterval -gt 0) { asyncGitFetch }
 
         $dirtyMark = if ($promptStatus.isDirty) { "*" } else { "" }
-        $branchName = $promptStatus.branch | &$pure.BranchFormatter
+        $branchName = &$pure.BranchFormatter $promptStatus.branch
  
         $prompt += " $branchName$dirtyMark" | fmtColor $pure.branchColor
         $prompt += " "
