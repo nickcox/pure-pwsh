@@ -1,83 +1,33 @@
+filter fmtColor($color) {"$color$_$esc[0m"}
+
 function global:prompt {
-    $isError = !$?
-    $Script:timer.Stop() # if we have a pending redraw, cancel it now
+  $isError = !$?
 
-    $startTime = Get-Date
+  ($gitPath = $watcher.Status.GitPath) -and ($repoPath = $gitPath | Split-Path) | out-null
+  $hasRepoChanged = $gitPath -and !($PWD.Path -like "$($repoPath)*")
+  if (!$gitPath -or $hasRepoChanged) { $watcher.PwdChanged($PWD) | out-null }
 
-    $hasRepoChanged = !($PWD.Path -eq $watcher.Path -or (
-            $watcher.EnableRaisingEvents -and ($PWD.Path -like "$($watcher.Path)*")))
+  $gitInfo = if ($gitPath -and !$hasRepoChanged) {
 
-    $prompt = "`n"
-    $prompt += &$pure.PwdFormatter $PWD.Path | fmtColor $pure.pwdColor
+    $branchName = &$pure.BranchFormatter $watcher.Status.BranchName
+    $dirtyMark = if ($watcher.Status.Dirty) { "*" }
+    "$branchName$dirtyMark" | fmtColor $pure._branchColor
 
-    if ((!$maybeDirty -and !$hasRepoChanged -and $promptStatus.gitDir) -or (
-            $gitStatus = if ($null -ne (Get-Module posh-git)) {get-gitstatus} else {$null})) {
+    $remote = if ($watcher.Status.Behind) { $pure.downChar }
+    $remote += if ($watcher.Status.Ahead) { $pure.upChar }
+    $remote | fmtColor $pure._remoteColor
+  }
 
-        if ($hasRepoChanged -or !$watcher.EnableRaisingEvents) {
-            Log 'Updating watched repo'
-
-            $watcher.Path = git rev-parse --show-toplevel | Resolve-Path
-            $watcher.EnableRaisingEvents = $true
-        }
-
-        if ($gitStatus) { $Script:promptStatus = getPromptStatus $gitStatus }
-
-        if ($pure.FetchInterval -gt 0) { asyncGitFetch }
-
-        $dirtyMark = if ($promptStatus.isDirty) { "*" } else { "" }
-        $branchName = &$pure.BranchFormatter $promptStatus.branch
- 
-        $prompt += " $branchName$dirtyMark" | fmtColor $pure.branchColor
-        $prompt += " "
-
-        if ($promptStatus.isBehind) {
-            $prompt += $pure.downChar | fmtColor $pure.remoteColor
-        }
-
-        if ($promptStatus.isAhead) {
-            $prompt += $pure.upChar | fmtColor $pure.remoteColor
-        }
+  $slowInfo = if ($lastCmd = Get-History -Count 1) {
+    $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
+    if ($diff -gt $pure.SlowCommandTime) {
+      "($("{0:f2}" -f $diff.TotalSeconds)s)" | fmtColor $pure._errorColor
     }
+  }
 
-    else {
-        $watcher.Path = $PWD
-        $watcher.EnableRaisingEvents = $false
-        $Script:promptStatus = getPromptStatus $null
-    }
+  $promptColor = if ($isError) {$pure._errorColor} else {$pure._promptColor}
+  $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
 
-    if ($lastCmd = Get-History -Count 1) {
-        $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
-        if ($diff -gt $pure.SlowCommandTime) {
-            $prompt += " ($("{0:f2}" -f $diff.TotalSeconds)s)" | fmtColor $pure.errorColor
-        }
-    }
-
-    $promptColor = if ($isError) {$pure.errorColor} else {$pure.PromptColor}
-    $prompt += "`n"
-    $prompt += "$($pure.PromptChar) " | fmtColor $promptColor
-    $prompt
-
-    $Script:maybeDirty = $false
-    $Script:backoff = $pure.DebounceMs
-    $endTime = (Get-Date) - $startTime
-    Log $endTime.TotalMilliseconds
-}
-
-$emptyStatus = @{
-    HasWorking = $false
-    HasIndex   = $false
-    AheadBy    = 0
-    BehindBy   = 0
-}
-
-function getPromptStatus($gitStatus) {
-    $status = $gitStatus |??? $emptyStatus
-    return [ordered]@{
-        updated  = if ($gitStatus) {Get-Date} else {[DateTime]::MinValue}
-        isDirty  = ($status.HasWorking -or $status.HasIndex)
-        isAhead  = ($status.AheadBy -gt 0)
-        isBehind = ($status.BehindBy -gt 0)
-        gitDir   = $status.GitDir
-        branch   = $status.Branch
-    }
+  "`n$(&$pure.PrePrompt $formattedPwd $gitInfo $slowInfo)" +
+  "`n$($pure.PromptChar | fmtColor $promptColor) "
 }
