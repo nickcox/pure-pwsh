@@ -14,21 +14,21 @@
 
 Set options on the `$pure` global.
 
-| Option                | Description                                     | Default value                                      |
-| :-------------------- | :---------------------------------------------- | :------------------------------------------------- |
-| **`PwdColor`**        | Colour of the current directory name.           | <img src="https://placehold.it/16/0000aa?text=+"/> |
-| **`BranchColor`**     | Colour of the current branch name.              | <img src="https://placehold.it/16/aaaaaa?text=+"/> |
-| **`RemoteColor`**     | Colour for remote status (up and down arrows).  | <img src="https://placehold.it/16/00aaaa?text=+"/> |
-| **`ErrorColor`**      | Colour for the error prompt and slow commands.  | <img src="https://placehold.it/16/aa0000?text=+"/> |
-| **`PromptColor`**     | Colour for the main prompt.                     | <img src="https://placehold.it/16/aa00aa?text=+"/> |
-| **`PromptChar`**      | Prompt character.                               | `❯` (or `→` on PSReadLine < 2.0)                   |
-| **`UpChar`**          | Up arrow.                                       | `⇡` (or `↑` on PSReadLine < 2.0)                   |
-| **`DownChar`**        | Down arrow.                                     | `⇣` (or `↓` on PSReadLine < 2.0)                   |
-| **`SlowCommandTime`** | Timespan at which command is considered 'slow'. | `00:05`                                            |
-| **`FetchInterval`**   | Period at which to check remotes for updates.   | `05:00`                                            |
-| **`BranchFormatter`** | Customize format of git branch name.            | `{$args}`                                          |
-| **`PwdFormatter`**    | Customize format of working dir name.           | `{$args -replace [Regex]::Escape($HOME),'~'}`      |
-| **`PrePrompt`**       | Customize the line displayed above the prompt.  | `param ($cwd, $git, $slow) "$cwd $git $slow"`      |
+| Option                | Description                               | Default value                                      |
+| :-------------------- | :---------------------------------------- | :------------------------------------------------- |
+| **`PwdColor`**        | Colour of the current directory name.     | <img src="https://placehold.it/18/0000aa?text=+"/> |
+| **`BranchColor`**     | Colour of the current branch name.        | <img src="https://placehold.it/18/aaaaaa?text=+"/> |
+| **`RemoteColor`**     | Colour of remote status (up/down arrows). | <img src="https://placehold.it/18/00aaaa?text=+"/> |
+| **`ErrorColor`**      | Colour of error prompt and slow commands. | <img src="https://placehold.it/18/aa0000?text=+"/> |
+| **`PromptColor`**     | Colour of the main prompt.                | <img src="https://placehold.it/18/aa00aa?text=+"/> |
+| **`PromptChar`**      | Prompt character.                         | `❯` (or `→` on PSReadLine < 2.0)                   |
+| **`UpChar`**          | Up arrow.                                 | `⇡` (or `↑` on PSReadLine < 2.0)                   |
+| **`DownChar`**        | Down arrow.                               | `⇣` (or `↓` on PSReadLine < 2.0)                   |
+| **`SlowCommandTime`** | Duration at which command is 'slow'.      | `00:05`                                            |
+| **`FetchInterval`**   | Period at which to fetch from remotes.    | `05:00`                                            |
+| **`BranchFormatter`** | Customize format of git branch name.      | `{$args}`                                          |
+| **`PwdFormatter`**    | Customize format of working dir name.     | `{$args -replace [Regex]::Escape($HOME),'~'}`      |
+| **`PrePrompt`**       | Customize the line above the prompt.      | `param ($cwd, $git, $slow) "$cwd $git $slow"`      |
 
 To customize the formatting of the current git branch or working directory, provide a function that
 transforms a string parameter into a string output. For example, this truncates the branch name by
@@ -50,7 +50,8 @@ Install from the [gallery](https://www.powershellgallery.com/packages/pure-pwsh)
 Install-Module pure-pwsh
 ```
 
-and import it in your profile.
+and import it in your profile. If you use this with `posh-git` (recommended for its excellent command completion)
+then you'll probably want to import `pure-pwsh` first so that `posh-git` doesn't waste time configuring the prompt.
 
 ```shell
 Import-Module pure-pwsh
