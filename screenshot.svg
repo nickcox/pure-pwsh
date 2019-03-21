@@ -27,8 +27,8 @@
         </symbol>
         <symbol id="2">
           <text y="1.67" class="f">~\projects\pure-pwsh</text>
-          <text x="20.042" y="1.67" class="h">master</text>
-          <text x="27.056" y="1.67" class="remote">⇡</text>
+          <text x="21.042" y="1.67" class="h">master</text>
+          <text x="28.056" y="1.67" class="remote">⇡</text>
         </symbol>
         <symbol id="a">
           <path fill="transparent" d="M0 0h80v21H0z"/>
@@ -53,7 +53,7 @@
           <text y="12.525" class="l">❯</text>
           <text x="2.004" y="12.525" class="command">sleep</text>
           <text x="7.016" y="12.525" class="k">-Seconds</text>
-          <text x="15.034" y="12.525" class="text">5</text>
+          <text x="16.034" y="12.525" class="text">5</text>
           <text y="16.867" class="f">~</text>
           <text x="3.006" y="16.867" class="l">(5.00s)</text>
           <text y="19.038" class="g">❯</text>
@@ -65,8 +65,8 @@
           <text x="5.01" y="25.551" class="text">dirty</text>
           <text x="10.022" y="25.551" class="text">.</text>
           <text y="29.893" class="f">~\projects\pure-pwsh</text>
-          <text x="20.042" y="29.893" class="h">master*</text>
-          <text x="28.058" y="29.893" class="remote">⇡</text>
+          <text x="21.042" y="29.893" class="h">master*</text>
+          <text x="29.058" y="29.893" class="remote">⇡</text>
           <text y="32.064" class="g">❯</text>
           <text x="2.004" y="32.064" class="command">rm</text>
           <text x="5.01" y="32.064" class="text">dirty</text>

@@ -60,8 +60,10 @@ function initOptions() {
       Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
     }
     else {
-      # PSReadLine < 2.0 seems to mangle the preferred prompt character on redraw
+      # PSReadLine < 2.0 seems to mangle the preferred characters on redraw
       $pure.PromptChar = '→'
+      $pure.UpChar = '↑'
+      $pure.DownChar = '↓'
     }
     if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
       Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
