@@ -1,74 +1,80 @@
-﻿function Set-PureOption() {
-    [CmdletBinding()]
-    param (
-        [ValidateSet(
-            'PwdColor',
-            'BranchColor',
-            'RemoteColor',
-            'ErrorColor',
-            'PromptColor',
-            'PromptChar',
-            'UpChar',
-            'DownChar',
-            'SlowCommandTime',
-            'FetchInterval',
-            'BranchFormatter',
-            'PwdFormatter')]
-        $Option,
-
-        [String]
-        $Value
-    )
-
-    if ($Option -like '*Color') {
-        $Global:pure.$option = (ansiSequence $Value)
-    }
-    else {
-        $Global:pure.$option = $Value
-    }
+﻿function ansiSequence([string] $Value) {
+  if ($Value.Contains($esc)) {$Value} else {"$esc[$Value"}
 }
 
-function ansiSequence([string] $value) {
-    $(if ($value.Contains($esc)) {$value} else {"$esc[$value"}) +
-    "*$esc[0m" # append an asterisk and reset the colour for display purposes
+Class Pure {
+  static hidden [char] $esc = $esc
+  static hidden [string] ansiSequence([string] $value) {
+    return ansiSequence $value
+  }
+  
+  hidden [string] $_pwdColor = (ansiSequence "34m")
+  hidden [string] $_branchColor = (ansiSequence "90m")
+  hidden [string] $_remoteColor = (ansiSequence "36m")
+  hidden [string] $_errorColor = (ansiSequence "91m")
+  hidden [string] $_promptColor = (ansiSequence "35m")
+  hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
+
+  [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
+  [char] $PromptChar = '❯'
+  [char] $UpChar = '⇡'
+  [char] $DownChar = '⇣'
+  [scriptblock] $BranchFormatter = {$args}
+  [scriptblock] $PwdFormatter = {$args -replace [Regex]::Escape($HOME), '~'}
+  [scriptblock] $PrePrompt = {param ($cwd, $git, $slow) "$cwd $git $slow"}
+
+  hidden addColorProperty([string] $name) {
+    $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
+      $this."_$name" + "⬛$([pure]::esc)[0m" # pretty it up for `$pure` display purposes
+    }.GetNewClosure() -SecondValue {
+      param([string] $value)
+      $this."_$name" = [pure]::ansiSequence($value)
+    }.GetNewClosure()
+  }
+
+  Pure() {
+    @('PwdColor', 'BranchColor', 'RemoteColor', 'ErrorColor', 'PromptColor') | % {
+      $this.addColorProperty($_)
+    }
+
+    $this | Add-Member -Name FetchInterval -MemberType ScriptProperty -Value {
+      $this._fetchInterval
+    } -SecondValue {
+      param([timespan] $value)
+      if ($value -lt [timespan]::FromSeconds(30)) { 
+        throw "Minimum fetch interval is 30s."
+      }
+      $Script:watcher.GitFetchMs = $Value.TotalMilliseconds
+      $this._fetchInterval = $value
+    }
+  }
 }
 
 function initOptions() {
-    $psrOptions = Get-PSReadlineOption
 
-    if ($psrOptions) {
-        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'PromptText') {
-            Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
-        }
-        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
-            Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
-        }
+  $Global:pure = New-Object Pure  
+  $psrOptions = Get-PSReadlineOption
 
-        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'Colors') {
-            Set-PSReadLineOption -Colors @{ ContinuationPrompt = $psrOptions.EmphasisColor }
-        }
-
-        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
-            Set-PSReadLineOption -ExtraPromptLineCount 2
-        }
+  if ($psrOptions) {
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'PromptText') {
+      Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
+    }
+    else {
+      # PSReadLine < 2.0 seems to mangle the preferred characters on redraw
+      $pure.PromptChar = '→'
+      $pure.UpChar = '↑'
+      $pure.DownChar = '↓'
+    }
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
+      Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
     }
 
-    $id = {$args}
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'Colors') {
+      Set-PSReadLineOption -Colors @{ ContinuationPrompt = $pure.PromptColor }
+    }
 
-    $Global:pure = New-Object PSObject -Property (
-        [ordered]@{
-            PwdColor        = ansiSequence ("34m")
-            BranchColor     = ansiSequence ("90m")
-            RemoteColor     = ansiSequence ("36m")
-            ErrorColor      = ansiSequence ("91m")
-            PromptColor     = ansiSequence ("35m")
-            PromptChar      = '❯'
-            UpChar          = '⇡'
-            DownChar        = '⇣'
-            SlowCommandTime = [timespan]::FromSeconds(5.0)
-            FetchInterval   = [timespan]::FromSeconds(300)
-            BranchFormatter = $id
-            PwdFormatter    = {$args -replace [Regex]::Escape($HOME), '~'}
-            DebounceMs      = 500
-        })
+    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
+      Set-PSReadLineOption -ExtraPromptLineCount 2
+    }
+  }
 }

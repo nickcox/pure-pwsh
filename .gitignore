@@ -1,1 +1,4 @@
 .vscode
+obj/
+pure-pwsh/bin/Debug/
+pure-pwsh/bin/Release/
