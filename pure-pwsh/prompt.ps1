@@ -18,7 +18,7 @@ function global:prompt {
     $remote | fmtColor $pure._remoteColor
   }
 
-  $slowInfo = if ($lastCmd = Get-History -Count 1) {
+  $slowInfo = if ($pure.SlowCommandTime -gt 0 -and ($lastCmd = Get-History -Count 1)) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
     if ($diff -gt $pure.SlowCommandTime) {
       "($("{0:f2}" -f $diff.TotalSeconds)s)" | fmtColor $pure._errorColor
