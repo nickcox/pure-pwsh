@@ -27,10 +27,10 @@ Set options on the `$pure` global.
 | **`SlowCommandTime`** | Duration at which command is 'slow'.      | `00:05`                                            |
 | **`FetchInterval`**   | Period at which to fetch from remotes.    | `05:00`                                            |
 | **`BranchFormatter`** | Customize format of git branch name.      | `{$args}`                                          |
-| **`PwdFormatter`**    | Customize format of working dir name.     | `{$args -replace [Regex]::Escape($HOME),'~'}`      |
-| **`PrePrompt`**       | Customize the line above the prompt.      | `param ($cwd, $git, $slow) "$cwd $git $slow"`      |
+| **`PwdFormatter`**    | Customize format of working dir name.     | `{param ($cwd) $cwd.Replace($HOME, '~')}`          |
+| **`PrePrompt`**       | Customize the line above the prompt.      | `{param ($cwd, $git, $slow) "$cwd $git $slow"}`    |
 
-To customize the formatting of the current git branch or working directory, provide a function that
+To customise the formatting of the current git branch or working directory, provide a function that
 transforms a string parameter into a string output. For example, this truncates the branch name by
 underscore delimited segments:
 
@@ -40,6 +40,13 @@ $pure.BranchFormatter = {
        @(((($_ -split '_' | select -First 3) -join '_') + '…'), $_)
      } | sort Length | select -First 1
 }
+```
+
+Similarly, you can customise the entire upper line by providing a function that transforms three string parameters
+(`$cwd`, `$git` and `$slow`) into a string output. For example, to include your username before the directory info:
+
+```sh
+$pure.PrePrompt = {param ($cwd, $git, $slow) "$($pure._branchColor)$env:UserName $cwd $git $slow"}
 ```
 
 ## Installation
