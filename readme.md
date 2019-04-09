@@ -46,7 +46,13 @@ Similarly, you can customise the entire upper line by providing a function that 
 (`$cwd`, `$git` and `$slow`) into a string output. For example, to include your username before the directory info:
 
 ```sh
-$pure.PrePrompt = {param ($cwd, $git, $slow) "$($pure._branchColor)$env:UserName $cwd $git $slow"}
+$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$($pure._branchColor)$env:UserName $cwd $git $slow`n"}
+```
+
+Or to put the entire prompt on one line, remove the `` `n `` at the end of the pre-prompt:
+
+```sh
+$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow"}
 ```
 
 ## Installation
