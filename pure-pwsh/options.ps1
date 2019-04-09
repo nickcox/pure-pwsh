@@ -20,8 +20,8 @@ Class Pure {
   [char] $UpChar = '⇡'
   [char] $DownChar = '⇣'
   [scriptblock] $BranchFormatter = {$args}
-  [scriptblock] $PwdFormatter = {$args -replace [Regex]::Escape($HOME), '~'}
-  [scriptblock] $PrePrompt = {param ($cwd, $git, $slow) "$cwd $git $slow"}
+  [scriptblock] $PwdFormatter = {$args.Replace($HOME, '~')}
+  [scriptblock] $PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow`n"}
 
   hidden addColorProperty([string] $name) {
     $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
@@ -52,12 +52,12 @@ Class Pure {
 
 function initOptions() {
 
-  $Global:pure = New-Object Pure  
+  $Global:pure = New-Object Pure
   $psrOptions = Get-PSReadlineOption
 
   if ($psrOptions) {
     if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'PromptText') {
-      Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
+      # Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
     }
     else {
       # PSReadLine < 2.0 seems to mangle the preferred characters on redraw
@@ -73,8 +73,9 @@ function initOptions() {
       Set-PSReadLineOption -Colors @{ ContinuationPrompt = $pure.PromptColor }
     }
 
-    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
-      Set-PSReadLineOption -ExtraPromptLineCount 2
+    if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
+      $extraLines = $pure.PrePrompt.ToString().Split("``n").Length - 1
+      Set-PSReadLineOption -ExtraPromptLineCount $extraLines
     }
   }
 }

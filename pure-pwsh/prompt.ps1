@@ -1,11 +1,11 @@
-filter fmtColor($color) {"$color$_$esc[0m"}
+filter fmtColor($color) { "$color$_$esc[0m" }
 
 function global:prompt {
   $isError = !$?
 
-  ($gitPath = $watcher.Status.GitPath) -and ($repoPath = $gitPath | Split-Path) | out-null
+  ($gitPath = $watcher.Status.GitPath) -and ($repoPath = $gitPath | Split-Path) | Out-Null
   $hasRepoChanged = $gitPath -and !($PWD.Path -like "$($repoPath)*")
-  if (!$gitPath -or $hasRepoChanged) { $watcher.PwdChanged($PWD) | out-null }
+  if (!$gitPath -or $hasRepoChanged) { $watcher.PwdChanged($PWD) | Out-Null }
 
   $gitInfo = if ($gitPath -and !$hasRepoChanged) {
 
@@ -15,19 +15,22 @@ function global:prompt {
 
     $remote = if ($watcher.Status.Behind) { $pure.downChar }
     $remote += if ($watcher.Status.Ahead) { $pure.upChar }
-    $remote | fmtColor $pure._remoteColor
-  }
 
+    if ($remote) { $remote | fmtColor $pure._remoteColor }
+  }
+  
   $slowInfo = if ($pure.SlowCommandTime -gt 0 -and ($lastCmd = Get-History -Count 1)) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
     if ($diff -gt $pure.SlowCommandTime) {
-      "($("{0:f2}" -f $diff.TotalSeconds)s)" | fmtColor $pure._errorColor
+      "($("{0:f2}" -f $diff.TotalSeconds)s) " | fmtColor $pure._errorColor
     }
   }
 
-  $promptColor = if ($isError) {$pure._errorColor} else {$pure._promptColor}
+  $promptColor = if ($isError) { $pure._errorColor } else { $pure._promptColor }
   $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
 
-  "`n$(&$pure.PrePrompt $formattedPwd $gitInfo $slowInfo)" +
-  "`n$($pure.PromptChar | fmtColor $promptColor) "
+  (
+    (&$pure.PrePrompt $formattedPwd $gitInfo $slowInfo ) +
+    ($pure.PromptChar | fmtColor $promptColor) + " "
+  ) -replace ' +', ' '
 }
