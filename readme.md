@@ -26,9 +26,9 @@ Set options on the `$pure` global.
 | **`DownChar`**        | Down arrow.                               | `⇣` (or `↓` on PSReadLine < 2.0)                   |
 | **`SlowCommandTime`** | Duration at which command is 'slow'.      | `00:05`                                            |
 | **`FetchInterval`**   | Period at which to fetch from remotes.    | `05:00`                                            |
-| **`BranchFormatter`** | Customize format of git branch name.      | `{$args}`                                          |
-| **`PwdFormatter`**    | Customize format of working dir name.     | `{param ($cwd) $cwd.Replace($HOME, '~')}`          |
-| **`PrePrompt`**       | Customize the line above the prompt.      | `{param ($cwd, $git, $slow) "`n$cwd $git $slow"`n}`|
+| **`BranchFormatter`** | Customize format of git branch name.      | `{ $args }`                                        |
+| **`PwdFormatter`**    | Customize format of working dir name.     | `{ param ($cwd) $cwd.Replace($HOME, '~') }`        |
+| **`PrePrompt`**       | Customize the line above the prompt.      | ``{ param ($cwd, $git, $slow) "`n$cwd $git $slow"`n }``|
 
 To customise the formatting of the current git branch or working directory, provide a function that
 transforms a string parameter into a string output. For example, this truncates the branch name by
