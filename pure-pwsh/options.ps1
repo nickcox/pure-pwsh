@@ -14,9 +14,9 @@ Class Pure {
   hidden [string] $_errorColor = (ansiSequence "91m")
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
+  hidden [char]   $_promptChar = '❯'
 
   [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
-  [char] $PromptChar = '❯'
   [char] $UpChar = '⇡'
   [char] $DownChar = '⇣'
   [scriptblock] $BranchFormatter = {$args}
@@ -29,6 +29,11 @@ Class Pure {
     }.GetNewClosure() -SecondValue {
       param([string] $value)
       $this."_$name" = [pure]::ansiSequence($value)
+      if ($name -eq 'PromptColor') {
+        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPromptColor') {
+          Set-PSReadLineOption -Colors @{ ContinuationPrompt = $this._PromptColor }
+        }
+      }
     }.GetNewClosure()
   }
 
@@ -47,6 +52,16 @@ Class Pure {
       $Script:watcher.GitFetchMs = $Value.TotalMilliseconds
       $this._fetchInterval = $value
     }
+
+    $this | Add-Member -Name PromptChar -MemberType ScriptProperty -Value {
+      $this._promptChar
+    } -SecondValue {
+      param([char] $value)
+      $this._promptChar = $value
+      if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
+        Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $value)
+      }
+    }
   }
 }
 
@@ -56,21 +71,11 @@ function initOptions() {
   $psrOptions = Get-PSReadlineOption
 
   if ($psrOptions) {
-    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'PromptText') {
-      # Set-PSReadLineOption -PromptText ("{0} " -f $pure.PromptChar)
-    }
-    else {
+    if ((Get-PSReadLineOption).PSObject.Properties.Name -notcontains 'PromptText') {
       # PSReadLine < 2.0 seems to mangle the preferred characters on redraw
       $pure.PromptChar = '→'
       $pure.UpChar = '↑'
       $pure.DownChar = '↓'
-    }
-    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
-      Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $pure.PromptChar)
-    }
-
-    if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'Colors') {
-      Set-PSReadLineOption -Colors @{ ContinuationPrompt = $pure.PromptColor }
     }
 
     if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
@@ -78,4 +83,7 @@ function initOptions() {
       Set-PSReadLineOption -ExtraPromptLineCount $extraLines
     }
   }
+
+  $Global:pure.PromptChar = $pure._promptChar
+  $Global:pure.PromptColor = $pure._promptColor
 }
