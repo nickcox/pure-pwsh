@@ -46,7 +46,7 @@ Similarly, you can customise the entire upper line by providing a function that 
 (`$cwd`, `$git` and `$slow`) into a string output. For example, to include your username before the directory info:
 
 ```sh
-$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$($pure._branchColor)$env:UserName $cwd $git $slow`n"}
+$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$($pure._branchColor)$([Environment]::UserName) $cwd $git $slow`n"}
 ```
 
 Or to put the entire prompt on one line, remove the `` `n `` at the end of the pre-prompt:
@@ -54,6 +54,15 @@ Or to put the entire prompt on one line, remove the `` `n `` at the end of the p
 ```sh
 $pure.PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow"}
 ```
+
+Further customisations can be easily made, for example to color your username a unique color you can provide an ANSI escade code, as follows
+```sh
+myColours = @{ blue = "`e[38;5;31m" }
+
+$pure.PrePrompt =
+  {param ($cwd, $git, $slow) "`n$($myColours.blue)$([Environment]::UserName) $cwd $git $slow"}
+```
+which colors the username [deep sky blue 3](https://jonasjacek.github.io/colors).
 
 ## Installation
 
