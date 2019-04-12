@@ -8,20 +8,20 @@ Class Pure {
     return ansiSequence $value
   }
   
+  hidden [char] $_promptChar = '❯'  
   hidden [string] $_pwdColor = (ansiSequence "34m")
   hidden [string] $_branchColor = (ansiSequence "90m")
   hidden [string] $_remoteColor = (ansiSequence "36m")
   hidden [string] $_errorColor = (ansiSequence "91m")
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
-  hidden [char]   $_promptChar = '❯'
+  hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
 
   [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
   [char] $UpChar = '⇡'
   [char] $DownChar = '⇣'
-  [scriptblock] $BranchFormatter = {$args}
-  [scriptblock] $PwdFormatter = {$args.Replace($HOME, '~')}
-  [scriptblock] $PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow`n"}
+  [scriptblock] $BranchFormatter = { $args }
+  [scriptblock] $PwdFormatter = { $args.Replace($HOME, '~') }
 
   hidden addColorProperty([string] $name) {
     $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
@@ -30,7 +30,7 @@ Class Pure {
       param([string] $value)
       $this."_$name" = [pure]::ansiSequence($value)
       if ($name -eq 'PromptColor') {
-        if ((Get-PSReadlineOption).PSObject.Properties.Name -contains 'ContinuationPromptColor') {
+        if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPromptColor') {
           Set-PSReadLineOption -Colors @{ ContinuationPrompt = $this._PromptColor }
         }
       }
@@ -38,7 +38,7 @@ Class Pure {
   }
 
   Pure() {
-    @('PwdColor', 'BranchColor', 'RemoteColor', 'ErrorColor', 'PromptColor') | % {
+    @('PwdColor', 'BranchColor', 'RemoteColor', 'ErrorColor', 'PromptColor') | ForEach-Object {
       $this.addColorProperty($_)
     }
 
@@ -62,6 +62,17 @@ Class Pure {
         Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $value)
       }
     }
+
+    $this | Add-Member -Name PrePrompt -MemberType ScriptProperty -Value {
+      $this._prePrompt
+    } -SecondValue {
+      param([scriptblock] $value)
+      $this._prePrompt = $value
+      if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
+        $extraLines = $value.ToString().Split("``n").Length - 1
+        Set-PSReadLineOption -ExtraPromptLineCount $extraLines
+      }
+    }
   }
 }
 
@@ -77,13 +88,9 @@ function initOptions() {
       $pure.UpChar = '↑'
       $pure.DownChar = '↓'
     }
-
-    if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
-      $extraLines = $pure.PrePrompt.ToString().Split("``n").Length - 1
-      Set-PSReadLineOption -ExtraPromptLineCount $extraLines
-    }
   }
 
   $Global:pure.PromptChar = $pure._promptChar
   $Global:pure.PromptColor = $pure._promptColor
+  $Global:pure.PrePrompt = $pure._prePrompt
 }
