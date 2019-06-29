@@ -16,6 +16,8 @@ Class Pure {
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
   hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
+  hidden [scriptblock] $_log = { Write-Verbose $args[0] }
+  hidden [hashtable] $_state = @{ isPending = $false; watcherCallback = { } }
 
   [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
   [char] $UpChar = '⇡'
@@ -25,7 +27,7 @@ Class Pure {
 
   hidden addColorProperty([string] $name) {
     $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
-      $this."_$name" + "⬛$([pure]::esc)[0m" # pretty it up for `$pure` display purposes
+      $this."_$name" + "*$([pure]::esc)[0m" # pretty it up for `$pure` display purposes
     }.GetNewClosure() -SecondValue {
       param([string] $value)
       $this."_$name" = [pure]::ansiSequence($value)

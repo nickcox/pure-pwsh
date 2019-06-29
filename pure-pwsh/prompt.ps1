@@ -8,7 +8,6 @@ function global:prompt {
   if (!$gitPath -or $hasRepoChanged) { $watcher.PwdChanged($PWD) | Out-Null }
 
   $gitInfo = if ($gitPath -and !$hasRepoChanged) {
-
     $branchName = &$pure.BranchFormatter $watcher.Status.BranchName
     $dirtyMark = if ($watcher.Status.Dirty) { "*" }
     "$branchName$dirtyMark" | fmtColor $pure._branchColor

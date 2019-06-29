@@ -1,3 +1,12 @@
+# Note
+
+This beta is intended for use with PSReadLine v2.0-beta4 or later.
+You can check your version with something like:
+
+```try { $m = Get-Module psreadline; $m.Version.ToString(); $m.PrivateData.PSData.Prerelease } catch { }```
+
+Update with `Update-Module PSReadline -AllowPrerelease` if necessary.
+
 # pure-pwsh
 
 > PowerShell implementation of the [pure prompt](https://github.com/sindresorhus/pure).
@@ -55,14 +64,15 @@ Or to put the entire prompt on one line, remove the `` `n `` at the end of the p
 $pure.PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow"}
 ```
 
-Further customisations can be easily made, for example to color your username a unique color you can provide an ANSI escade code, as follows
+Further customisations can be made, for example to colour your username you could combine it with an ANSI escape code:
+
 ```sh
-myColours = @{ blue = "`e[38;5;31m" }
+myColours = @{ blue = "`e[38;5;31m" } # "$([char]27)[38;5;31m" on PowerShell < 6.0
 
 $pure.PrePrompt =
   {param ($cwd, $git, $slow) "`n$($myColours.blue)$([Environment]::UserName) $cwd $git $slow"}
 ```
-which colors the username [deep sky blue 3](https://jonasjacek.github.io/colors).
+which colours the username [deep sky blue 3](https://jonasjacek.github.io/colors).
 
 ## Installation
 

@@ -1,6 +1,6 @@
 @{
   RootModule        = 'pure-pwsh.psm1'
-  ModuleVersion     = '0.6.2'
+  ModuleVersion     = '0.7.0'
   GUID              = '94d168c3-c48f-4937-bc82-4d54b5b9e777'
 
   Author            = 'Nick Cox'
@@ -14,6 +14,7 @@
 
   PrivateData       = @{
     PSData = @{
+      Prerelease = 'beta1'
       Tags       = @('pure', 'prompt')
       LicenseUri = 'https://github.com/nickcox/pure-pwsh/blob/master/LICENSE'
       ProjectUri = 'https://github.com/nickcox/pure-pwsh'
