@@ -79,7 +79,7 @@ which colours the username [deep sky blue 3](https://jonasjacek.github.io/colors
 Install from the [gallery](https://www.powershellgallery.com/packages/pure-pwsh) or clone this repository:
 
 ```shell
-Install-Module pure-pwsh
+Install-Module pure-pwsh -AllowPrerelease
 ```
 
 and import it in your profile. If you use this with `posh-git` (recommended for its excellent command completion)
