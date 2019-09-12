@@ -16,8 +16,12 @@ Class Pure {
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
   hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
-  hidden [scriptblock] $_log = { Write-Verbose $args[0] }
-  hidden [hashtable] $_state = @{ isPending = $false; watcherCallback = { } }
+  hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus }
+  hidden [hashtable] $_functions = @{
+    log           = { Write-Verbose $args[0] };
+    getStatus     = { GetGitStatus }
+    updateStatus  = { UpdateStatus }
+  }
 
   [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
   [char] $UpChar = '⇡'

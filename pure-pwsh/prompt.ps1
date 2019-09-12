@@ -3,17 +3,19 @@ filter fmtColor($color) { "$color$_$esc[0m" }
 function global:prompt {
   $isError = !$?
 
-  ($gitPath = $watcher.Status.GitPath) -and ($repoPath = $gitPath | Split-Path) | Out-Null
-  $hasRepoChanged = $gitPath -and !($PWD.Path -like "$($repoPath)*")
-  if (!$gitPath -or $hasRepoChanged) { $watcher.PwdChanged($PWD) | Out-Null }
+  $status = $pure._state.status
+  $status.gitDir -and ($repoPath = $status.gitDir | Split-Path) | Out-Null
+  $hasRepoChanged = $status.gitDir -and !($PWD.Path -like "$($repoPath)*")
 
-  $gitInfo = if ($gitPath -and !$hasRepoChanged) {
-    $branchName = &$pure.BranchFormatter $watcher.Status.BranchName
-    $dirtyMark = if ($watcher.Status.Dirty) { "*" }
+  if (!$status.gitDir -or $hasRepoChanged) { UpdateStatus }
+
+  $gitInfo = if ($status.gitDir -and !$hasRepoChanged) {
+    $branchName = &$pure.BranchFormatter $status.branch
+    $dirtyMark = if ($status.dirty) { "*" }
     "$branchName$dirtyMark" | fmtColor $pure._branchColor
 
-    $remote = if ($watcher.Status.Behind) { $pure.downChar }
-    $remote += if ($watcher.Status.Ahead) { $pure.upChar }
+    $remote = if ($status.behind) { $pure.downChar }
+    $remote += if ($status.ahead) { $pure.upChar }
 
     if ($remote) { $remote | fmtColor $pure._remoteColor }
   }
