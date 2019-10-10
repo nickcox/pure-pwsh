@@ -8,10 +8,10 @@ $Script:esc = [char]27
 initOptions
 
 function registerWatcherEvent($eventName) {
-  Register-ObjectEvent -InputObject $watcher -EventName $eventName -Action $updateOnChange
+  Register-ObjectEvent -InputObject $watcher -EventName $eventName -Action $UpdateOnChange
 }
 
-UpdateStatus
+# UpdateStatus
 $Global:watcher = [IO.FileSystemWatcher]::new()
 $watcher.Path = (Get-Location).Path
 $watcher.IncludeSubdirectories = $true

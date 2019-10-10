@@ -1,5 +1,5 @@
 ﻿function ansiSequence([string] $Value) {
-  if ($Value.Contains($esc)) {$Value} else {"$esc[$Value"}
+  if ($Value.Contains($esc)) { $Value } else { "$esc[$Value" }
 }
 
 Class Pure {
@@ -7,7 +7,7 @@ Class Pure {
   static hidden [string] ansiSequence([string] $value) {
     return ansiSequence $value
   }
-  
+
   hidden [char] $_promptChar = '❯'  
   hidden [string] $_pwdColor = (ansiSequence "34m")
   hidden [string] $_branchColor = (ansiSequence "90m")
@@ -16,11 +16,11 @@ Class Pure {
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
   hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
-  hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus }
+  hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus; gitDir = '' }
   hidden [hashtable] $_functions = @{
-    log           = { Write-Verbose $args[0] };
-    getStatus     = { GetGitStatus }
-    updateStatus  = { UpdateStatus }
+    log          = { Write-Verbose $args[0] };
+    getStatus    = { GetGitStatus $args[0] }
+    updateStatus = { UpdateStatus }
   }
 
   [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))

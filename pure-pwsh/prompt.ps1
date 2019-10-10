@@ -3,13 +3,22 @@ filter fmtColor($color) { "$color$_$esc[0m" }
 function global:prompt {
   $isError = !$?
 
+  $gitDir = $pure._state.gitDir = GetGitDir
+
+  if ($gitDir) {
+    $watcher.Path = $gitDir | Split-Path
+    $watcher.EnableRaisingEvents = $true
+  }
+  else {
+    $watcher.EnableRaisingEvents = $false
+  }
+
   $status = $pure._state.status
-  $status.gitDir -and ($repoPath = $status.gitDir | Split-Path) | Out-Null
-  $hasRepoChanged = $status.gitDir -and !($PWD.Path -like "$($repoPath)*")
+  $hasRepoChanged = $gitDir -and ($gitDir -ne $status.gitDir)
 
-  if (!$status.gitDir -or $hasRepoChanged) { UpdateStatus }
+  if ($hasRepoChanged) { UpdateStatus }
 
-  $gitInfo = if ($status.gitDir -and !$hasRepoChanged) {
+  $gitInfo = if ($gitDir -and !$hasRepoChanged) {
     $branchName = &$pure.BranchFormatter $status.branch
     $dirtyMark = if ($status.dirty) { "*" }
     "$branchName$dirtyMark" | fmtColor $pure._branchColor

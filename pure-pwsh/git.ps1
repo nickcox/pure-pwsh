@@ -1,9 +1,8 @@
-function GetRepositoryRoot() {
-  iex 'git rev-parse --absolute-git-dir' -ea Ignore | split-path
+function GetGitDir() {
+  iex 'git rev-parse --absolute-git-dir'
 }
 
 function GetGitStatus($gitDir) {
-  if (!$gitDir) { $gitDir = GetRepositoryRoot}
   if (!$gitDir) {
     return @{
       ahead  = $false
@@ -15,13 +14,13 @@ function GetGitStatus($gitDir) {
   }
 
   $status = (
-    git status -z -b
+    git --git-dir $gitDir status -z -b
   ).Split(0, [System.StringSplitOptions]::RemoveEmptyEntries)
 
   $ahead = $status -match '^##.*\[ahead \d+\]'
   $behind = $status -match '^##.*\[behind \d+\]'
   $dirty = $status.length -gt 1
-  $branch = if ($status[0] -match '^## (?<branch>\w*)\W') { $Matches['branch'] }
+  $branch = if ($status[0] -match '^## (?<branch>\w*)') { $Matches['branch'] }
 
   @{
     ahead  = !!$ahead
