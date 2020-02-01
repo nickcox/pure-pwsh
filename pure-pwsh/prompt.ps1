@@ -32,7 +32,7 @@ function global:prompt {
   $slowInfo = if ($pure.SlowCommandTime -gt 0 -and ($lastCmd = Get-History -Count 1)) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
     if ($diff -gt $pure.SlowCommandTime) {
-      "($("{0:f2}" -f $diff.TotalSeconds)s) " | fmtColor $pure._errorColor
+      '({0})' -f ('{0:hh\:mm\:ss\s}' -f $diff).TrimStart(':0') | fmtColor $pure._errorColor
     }
   }
 
