@@ -8,13 +8,13 @@ Class Pure {
     return ansiSequence $value
   }
 
-  hidden [char] $_promptChar = '❯'  
+  hidden [char] $_promptChar = '❯'
   hidden [string] $_pwdColor = (ansiSequence "34m")
   hidden [string] $_branchColor = (ansiSequence "90m")
   hidden [string] $_remoteColor = (ansiSequence "36m")
   hidden [string] $_errorColor = (ansiSequence "91m")
   hidden [string] $_promptColor = (ansiSequence "35m")
-  hidden [string] $_fetchInterval = ([timespan]::FromMinutes(5))
+  hidden [timespan] $_fetchInterval = ([timespan]::FromMinutes(5))
   hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
   hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus; gitDir = '' }
   hidden [hashtable] $_functions = @{
@@ -52,10 +52,20 @@ Class Pure {
       $this._fetchInterval
     } -SecondValue {
       param([timespan] $value)
-      if ($value -lt [timespan]::FromSeconds(30)) { 
-        throw "Minimum fetch interval is 30s."
+
+      if ($value -eq 0) {
+        $Script:fetchTimer.Enabled = $false
+        $this._fetchInterval = $value
+        return
       }
-      $Script:watcher.GitFetchMs = $Value.TotalMilliseconds
+
+      if ($value -lt [timespan]::FromSeconds(30)) {
+        throw "Minimum fetch interval is 30s or 0 to disable."
+      }
+
+      $Script:fetchTimer.Interval = $value.TotalMilliseconds
+      $Script:fetchTimer.Enabled = $true
+
       $this._fetchInterval = $value
     }
 

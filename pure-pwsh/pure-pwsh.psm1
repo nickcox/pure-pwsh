@@ -11,10 +11,12 @@ function registerWatcherEvent($eventName) {
   Register-ObjectEvent -InputObject $watcher -EventName $eventName -Action $UpdateOnChange
 }
 
-# UpdateStatus
-$Global:watcher = [IO.FileSystemWatcher]::new()
+$Script:watcher = [IO.FileSystemWatcher]::new()
 $watcher.Path = (Get-Location).Path
 $watcher.IncludeSubdirectories = $true
+
+$Script:fetchTimer = [System.Timers.Timer]::new($pure.FetchInterval.TotalMilliseconds)
+Register-ObjectEvent -InputObject $Script:fetchTimer -EventName Elapsed -Action $Fetch
 
 $null = registerWatcherEvent Changed
 $null = registerWatcherEvent Deleted
