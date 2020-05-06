@@ -26,7 +26,7 @@ Describe 'pure-pwsh' {
     Describe 'non-repository directory' {
       It 'shows the current directory' {
         prompt | Should -Match 'repo1\W'
-        $pure._state.gitDir | SHould -BeNullOrEmpty
+        $pure._state.repoDir | SHould -BeNullOrEmpty
       }
     }
 
@@ -35,7 +35,7 @@ Describe 'pure-pwsh' {
         git init
 
         $null = prompt # updates current git directory
-        $pure._state.gitDir | Should -Match 'repo1/.git$'
+        $pure._state.repoDir | Resolve-Path | Should -Be (Get-Item .).FullName
 
         DoBeforeIdle { }
 
@@ -111,19 +111,19 @@ Describe 'pure-pwsh' {
 
       It 'handles changing into a repository that has new changes' {
         DoBeforeIdle {
-          $pure._state.gitDir | Should -Not -BeNullOrEmpty
+          $pure._state.repoDir | Should -Not -BeNullOrEmpty
           $pure._state.status.dirty | Should -Be $false
           cd TestDrive:/
         }
 
-        $pure._state.gitDir | Should -BeNullOrEmpty
+        $pure._state.repoDir | Should -BeNullOrEmpty
         Add-Content repo1/test.txt 'qux'
 
         DoBeforeIdle {
           cd TestDrive:/repo1
         }
 
-        $pure._state.gitDir | Should -Not -BeNullOrEmpty
+        $pure._state.repoDir | Should -Not -BeNullOrEmpty
         $pure._state.status.dirty | Should -Be $true
       }
     }

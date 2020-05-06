@@ -3,12 +3,12 @@ filter fmtColor($color) { "$color$_$esc[0m" }
 function global:prompt {
   $isError = !$?
 
-  $prevGitDir = $pure._state.gitDir
-  $gitDir = $pure._state.gitDir = GetGitDir
-  $hasRepoChanged = $gitDir -and ($gitDir -ne $prevGitDir)
+  $prevrepoDir = $pure._state.repoDir
+  $repoDir = $pure._state.repoDir = GetrepoDir
+  $hasRepoChanged = $repoDir -and ($repoDir -ne $prevrepoDir)
 
-  if ($gitDir) {
-    $watcher.Path = $gitDir | Split-Path # assumes .git is a subdirectory of working tree
+  if ($repoDir) {
+    $watcher.Path = $repoDir
     $watcher.EnableRaisingEvents = $true
     $Script:fetchTimer.Enabled = $pure.FetchInterval -gt 0
   }
@@ -23,7 +23,7 @@ function global:prompt {
 
   # otherwise we already have all the info we need
   $status = $pure._state.status
-  $gitInfo = if ($gitDir -and !$hasRepoChanged) {
+  $gitInfo = if ($repoDir -and !$hasRepoChanged) {
     $branchName = &$pure.BranchFormatter $status.branch
     $dirtyMark = if ($status.dirty) { "*" }
     "$branchName$dirtyMark" | fmtColor $pure._branchColor
