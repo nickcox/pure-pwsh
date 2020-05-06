@@ -20,13 +20,13 @@ function GetGitStatus($gitDir) {
   $ahead = $status -match '^##.*\[ahead \d+\]?'
   $behind = $status -match '^##.*\[?behind \d+\]'
   $dirty = $status.length -gt 1
-  $branch = if ($status[0] -match '^## (?<branch>[\w ]*)') { $Matches['branch'] }
+  $branch = if ($status[0] -match '^## (?<branch>[^\.]*)') { $Matches['branch'] }
 
   [Ordered] @{
-    ahead   = !!$ahead
-    behind  = !!$behind
-    dirty   = $dirty
-    branch  = $branch
-    gitDir  = $gitDir
+    ahead  = !!$ahead
+    behind = !!$behind
+    dirty  = $dirty
+    branch = $branch
+    gitDir = $gitDir
   }
 }
