@@ -51,7 +51,14 @@ Class Pure {
     $this | Add-Member -Name FetchInterval -MemberType ScriptProperty -Value {
       $this._fetchInterval
     } -SecondValue {
-      param([timespan] $value)
+      param($value)
+
+      if ($value -is [Int]) {
+        $value = [timespan]::FromSeconds($value)
+      }
+      else {
+        $value = [timespan]$value
+      }
 
       if ($value -eq 0) {
         $Script:fetchTimer.Enabled = $false
@@ -60,7 +67,7 @@ Class Pure {
       }
 
       if ($value -lt [timespan]::FromSeconds(30)) {
-        throw "Minimum fetch interval is 30s or 0 to disable."
+        throw "Minimum fetch interval is 30s. (0 to disable.)"
       }
 
       $Script:fetchTimer.Interval = $value.TotalMilliseconds
