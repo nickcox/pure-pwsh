@@ -27,7 +27,7 @@ $Script:OnIdleCallback = {
 $Script:UpdateOnChange = {
   if (
     $pure._state.isPending -or
-    $Event.SourceEventArgs.Name -eq '.git' -or
+    $Event.SourceEventArgs.Name -match '\.git$' -or
     $Event.SourceEventArgs.Name -like '.git*.lock'
   ) { return }
   &$pure._functions.log "Change detected ($($Event.SourceEventArgs.Name))"
