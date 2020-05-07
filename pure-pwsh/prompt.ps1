@@ -43,7 +43,8 @@ function global:prompt {
 
   $promptColor = if ($isError) { $pure._errorColor } else { $pure._promptColor }
   $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
+  $formattedUser = &$pure.UserFormatter $env:SSH_CONNECTION $env:USERNAME ([System.Net.Dns]::GetHostName()) | fmtColor $pure._branchColor
 
-  (&$pure.PrePrompt $formattedPwd $gitInfo $slowInfo ) +
+  (&$pure.PrePrompt $formattedUser $formattedPwd $gitInfo $slowInfo ) +
   ($pure.PromptChar | fmtColor $promptColor) + " "
 }

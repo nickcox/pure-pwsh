@@ -15,7 +15,7 @@ Class Pure {
   hidden [string] $_errorColor = (ansiSequence "91m")
   hidden [string] $_promptColor = (ansiSequence "35m")
   hidden [timespan] $_fetchInterval = ([timespan]::FromMinutes(5))
-  hidden [scriptblock] $_prePrompt = { param ($cwd, $git, $slow) "`n$cwd $git $slow`n" }
+  hidden [scriptblock] $_prePrompt = { param ($user, $cwd, $git, $slow) "`n$user$cwd $git $slow`n" }
   hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus; repoDir = '' }
   hidden [hashtable] $_functions = @{
     log          = { Write-Verbose $args[0] };
@@ -28,6 +28,7 @@ Class Pure {
   [char] $DownChar = '⇣'
   [scriptblock] $BranchFormatter = { $args }
   [scriptblock] $PwdFormatter = { $args.Replace($HOME, '~') }
+  [scriptblock] $UserFormatter = { param ($isSsh, $user, $hostname) $isSsh ? "$user@$hostname " : "" }
 
   hidden addColorProperty([string] $name) {
     $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
