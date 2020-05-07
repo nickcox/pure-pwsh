@@ -2,6 +2,20 @@
   if ($Value.Contains($esc)) { $Value } else { "$esc[$Value" }
 }
 
+function addColorProperty([psobject]$target, [string] $name) {
+  $target | Add-Member -Name $name -MemberType ScriptProperty -Value {
+    $target."_$name" + "*$([pure]::esc)[0m" # pretty it up for `$pure` display purposes
+  }.GetNewClosure() -SecondValue {
+    param([string] $value)
+    $target."_$name" = [pure]::ansiSequence($value)
+    if ($name -eq 'PromptColor') {
+      if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPromptColor') {
+        Set-PSReadLineOption -Colors @{ ContinuationPrompt = $this._PromptColor }
+      }
+    }
+  }.GetNewClosure()
+}
+
 Class Pure {
   static hidden [char] $esc = $esc
   static hidden [string] ansiSequence([string] $value) {
@@ -23,30 +37,17 @@ Class Pure {
     updateStatus = { UpdateStatus }
   }
 
-  [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
   [char] $UpChar = '⇡'
   [char] $DownChar = '⇣'
+  [char] $PendingChar = '⋯'
+  [timespan] $SlowCommandTime = ([timespan]::FromSeconds(5))
   [scriptblock] $BranchFormatter = { $args }
   [scriptblock] $PwdFormatter = { $args.Replace($HOME, '~') }
   [scriptblock] $UserFormatter = { param ($isSsh, $user, $hostname) $isSsh ? "$user@$hostname " : "" }
 
-  hidden addColorProperty([string] $name) {
-    $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
-      $this."_$name" + "*$([pure]::esc)[0m" # pretty it up for `$pure` display purposes
-    }.GetNewClosure() -SecondValue {
-      param([string] $value)
-      $this."_$name" = [pure]::ansiSequence($value)
-      if ($name -eq 'PromptColor') {
-        if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPromptColor') {
-          Set-PSReadLineOption -Colors @{ ContinuationPrompt = $this._PromptColor }
-        }
-      }
-    }.GetNewClosure()
-  }
-
   Pure() {
     @('PwdColor', 'BranchColor', 'RemoteColor', 'ErrorColor', 'PromptColor') | ForEach-Object {
-      $this.addColorProperty($_)
+      addColorProperty $this $_
     }
 
     $this | Add-Member -Name FetchInterval -MemberType ScriptProperty -Value {
@@ -77,16 +78,6 @@ Class Pure {
       $this._fetchInterval = $value
     }
 
-    $this | Add-Member -Name PromptChar -MemberType ScriptProperty -Value {
-      $this._promptChar
-    } -SecondValue {
-      param([char] $value)
-      $this._promptChar = $value
-      if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
-        Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $value)
-      }
-    }
-
     $this | Add-Member -Name PrePrompt -MemberType ScriptProperty -Value {
       $this._prePrompt
     } -SecondValue {
@@ -97,23 +88,21 @@ Class Pure {
         Set-PSReadLineOption -ExtraPromptLineCount $extraLines
       }
     }
+
+    $this | Add-Member -Name PromptChar -MemberType ScriptProperty -Value {
+      $this._promptChar
+    } -SecondValue {
+      param([char] $value)
+      $this._promptChar = $value
+      if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ContinuationPrompt') {
+        Set-PSReadLineOption -ContinuationPrompt ("{0}{0} " -f $value)
+      }
+    }
   }
 }
 
 function initOptions() {
-
   $Global:pure = New-Object Pure
-  $psrOptions = Get-PSReadlineOption
-
-  if ($psrOptions) {
-    if ((Get-PSReadLineOption).PSObject.Properties.Name -notcontains 'PromptText') {
-      # PSReadLine < 2.0 seems to mangle the preferred characters on redraw
-      $pure.PromptChar = '→'
-      $pure.UpChar = '↑'
-      $pure.DownChar = '↓'
-    }
-  }
-
   $Global:pure.PromptChar = $pure._promptChar
   $Global:pure.PromptColor = $pure._promptColor
   $Global:pure.PrePrompt = $pure._prePrompt

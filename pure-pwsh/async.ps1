@@ -1,5 +1,5 @@
 function UpdateStatus() {
-  $pure._state.repoDir = GetrepoDir
+  $pure._state.repoDir = GetRepoDir
 
   if ($pure._state.repoDir) {
     $pure._state.isPending = $true

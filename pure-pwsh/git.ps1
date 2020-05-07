@@ -6,7 +6,7 @@ $Script:emptyStatus = [Ordered] @{
   repoDir = $null
 }
 
-function GetrepoDir() {
+function GetRepoDir() {
   git rev-parse --show-toplevel
 }
 
@@ -14,7 +14,7 @@ function GetGitStatus($repoDir) {
   if (!$repoDir) { return $Script:emptyStatus }
 
   $status = (
-    git -C $repoDir status -z -b
+    git -C $repoDir --no-optional-locks status -z -b
   ).Split(0, [System.StringSplitOptions]::RemoveEmptyEntries)
 
   $ahead = $status -match '^##.*\[ahead \d+\]?'

@@ -4,7 +4,7 @@ function global:prompt {
   $isError = !$?
 
   $prevrepoDir = $pure._state.repoDir
-  $repoDir = $pure._state.repoDir = GetrepoDir
+  $repoDir = $pure._state.repoDir = GetRepoDir
   $hasRepoChanged = $repoDir -and ($repoDir -ne $prevrepoDir)
 
   if ($repoDir) {
@@ -33,6 +33,7 @@ function global:prompt {
 
     if ($remote) { $remote | fmtColor $pure._remoteColor }
   }
+  elseif ($hasRepoChanged) { $pure.PendingChar | fmtColor $pure._branchColor }
 
   $slowInfo = if ($pure.SlowCommandTime -gt 0 -and ($lastCmd = Get-History -Count 1)) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
@@ -43,7 +44,8 @@ function global:prompt {
 
   $promptColor = if ($isError) { $pure._errorColor } else { $pure._promptColor }
   $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
-  $formattedUser = &$pure.UserFormatter $env:SSH_CONNECTION $env:USERNAME ([System.Net.Dns]::GetHostName()) | fmtColor $pure._branchColor
+  $formattedUser = 
+    &$pure.UserFormatter $env:SSH_CONNECTION $env:USERNAME ($env:COMPUTERNAME ?? $env:HOSTNAME) | fmtColor $pure._branchColor
 
   (&$pure.PrePrompt $formattedUser $formattedPwd $gitInfo $slowInfo ) +
   ($pure.PromptChar | fmtColor $promptColor) + " "
