@@ -42,6 +42,8 @@ function global:prompt {
     }
   }
 
+  if ($pure.WindowTitle) { $host.UI.RawUI.WindowTitle = &$pure.WindowTitle }
+
   $promptColor = ($isError) ? $pure._errorColor : $pure._promptColor
   $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
   $formattedUser =

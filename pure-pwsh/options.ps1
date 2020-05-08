@@ -25,6 +25,7 @@
   [scriptblock] $BranchFormatter = { $args }
   [scriptblock] $PwdFormatter = { $args.Replace($HOME, '~') }
   [scriptblock] $UserFormatter = { param ($isSsh, $user, $hostname) $isSsh ? "$user@$hostname " : "" }
+  [scriptblock] $WindowTitle = { $PWD.Path.Replace($HOME, '~') }
 
   hidden [void] updatePSReadLine() {
     if ((Get-PSReadLineOption).PSObject.Properties.Name -contains 'ExtraPromptLineCount') {
