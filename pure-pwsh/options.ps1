@@ -3,14 +3,22 @@
     return ($Value -match "`e") ? $Value : "`e[${Value}m"
   }
 
+  static hidden [timespan] timespan($value) {
+    return ($value -is [Int]) ? [timespan]::FromSeconds($value) : [timespan]$value
+  }
+
   hidden [char] $_promptChar = '❯'
   hidden [string] $_pwdColor = [Pure]::ansiSequence('34')
-  hidden [string] $_branchColor = [Pure]::ansiSequence('90')
+  hidden [string] $_branchColor = [Pure]::ansiSequence('38;5;242')
+  hidden [string] $_dirtyColor = [Pure]::ansiSequence('38;5;218')
   hidden [string] $_remoteColor = [Pure]::ansiSequence('36')
-  hidden [string] $_errorColor = [Pure]::ansiSequence('91')
+  hidden [string] $_errorColor = [Pure]::ansiSequence('31')
   hidden [string] $_promptColor = [Pure]::ansiSequence('35')
-  hidden [timespan] $_fetchInterval = ([timespan]::FromMinutes(5))
-  hidden [scriptblock] $_prePrompt = { param ($user, $cwd, $git, $slow) "`n$user$cwd $git $slow `n" }
+  hidden [string] $_timeColor = [Pure]::ansiSequence('33')
+  hidden [string] $_userColor = [Pure]::ansiSequence('38;5;242')
+  hidden [timespan] $_fetchInterval = [timespan]::FromMinutes(5)
+  hidden [timespan] $_slowCommandTime = [timespan]::FromSeconds(10)
+  hidden [scriptblock] $_prePrompt = { param ($user, $cwd, $git, $slow) "`n$user{0}$cwd $git $slow `n" -f ($user ? ' ' : '') }
   hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus; repoDir = '' }
   hidden [hashtable] $_functions = @{
     log          = { Write-Verbose $args[0] };
@@ -21,10 +29,9 @@
   [char] $UpChar = '⇡'
   [char] $DownChar = '⇣'
   [char] $PendingChar = '⋯'
-  [timespan] $SlowCommandTime = ([timespan]::FromSeconds(10))
   [scriptblock] $BranchFormatter = { $args }
   [scriptblock] $PwdFormatter = { $args.Replace($HOME, '~') }
-  [scriptblock] $UserFormatter = { param ($isSsh, $user, $hostname) $isSsh ? "$user@$hostname " : "" }
+  [scriptblock] $UserFormatter = { param ($isSsh, $user, $hostname) $isSsh ? "$user@$hostname" : '' }
   [scriptblock] $WindowTitle = { $PWD.Path.Replace($HOME, '~') }
 
   hidden [void] updatePSReadLine() {
@@ -42,7 +49,8 @@
     }
   }
 
-  hidden [void] addColorProperty([string] $name) {
+  hidden [void] addColorProperty([string] $shortName) {
+    $name = "${shortName}Color"
     $this | Add-Member -Name $name -MemberType ScriptProperty -Value {
       $this."_$name" + "*`e[0m" # coloured asterisk for display purposes
     }.GetNewClosure() -SecondValue {
@@ -53,16 +61,20 @@
   }
 
   Pure() {
-    @('PwdColor', 'BranchColor', 'RemoteColor', 'ErrorColor', 'PromptColor') | ForEach-Object {
+    @('Pwd', 'Branch', 'Dirty', 'Remote', 'Error', 'Prompt', 'Time', 'User') | ForEach-Object {
       $this.addColorProperty($_)
     }
+
+    $this | Add-Member -Name SlowCommandTime -MemberType ScriptProperty -Value {
+      $this._slowCommandTime
+    } -SecondValue { $this._slowCommandTime = [Pure]::timespan($args[0]) }
 
     $this | Add-Member -Name FetchInterval -MemberType ScriptProperty -Value {
       $this._fetchInterval
     } -SecondValue {
       param($value)
 
-      $timespan = ($value -is [Int]) ? [timespan]::FromSeconds($value) : [timespan]$value
+      $timespan = [Pure]::timespan($value)
 
       if ($timespan -eq 0) {
         $Script:fetchTimer.Enabled = $false

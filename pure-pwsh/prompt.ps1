@@ -1,4 +1,4 @@
-filter fmtColor($color) { "$color$_`e[0m" }
+filter fmtColor($color) { $_ ? "$color$_`e[0m" : '' }
 
 function global:prompt {
   $isError = !$?
@@ -26,7 +26,8 @@ function global:prompt {
   $gitInfo = if ($repoDir -and !$hasRepoChanged) {
     $branchName = &$pure.BranchFormatter $status.branch
     $dirtyMark = if ($status.dirty) { "*" }
-    "$branchName$dirtyMark" | fmtColor $pure._branchColor
+
+    ($branchName | fmtColor $pure._branchColor) + ($dirtyMark | fmtColor $pure._dirtyColor)
 
     $remote = if ($status.behind) { $pure.downChar }
     $remote += if ($status.ahead) { $pure.upChar }
@@ -38,17 +39,17 @@ function global:prompt {
   $slowInfo = if ($pure.SlowCommandTime -gt 0 -and ($lastCmd = Get-History -Count 1)) {
     $diff = $lastCmd.EndExecutionTime - $lastCmd.StartExecutionTime
     if ($diff -gt $pure.SlowCommandTime) {
-      '({0})' -f ('{0:hh\:mm\:ss\s}' -f $diff).TrimStart(':0') | fmtColor $pure._errorColor
+      '({0})' -f ('{0:hh\:mm\:ss\s}' -f $diff).TrimStart(':0') | fmtColor $pure._timeColor
     }
   }
 
   if ($pure.WindowTitle) { $host.UI.RawUI.WindowTitle = &$pure.WindowTitle }
 
   $promptColor = ($isError) ? $pure._errorColor : $pure._promptColor
-  $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
-  $formattedUser =
-    &$pure.UserFormatter $env:SSH_CONNECTION ($env:USERNAME ?? $env:USER) ($env:COMPUTERNAME ?? (hostname)) | fmtColor $pure._branchColor
+  $cwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
+  $user = &$pure.UserFormatter $env:SSH_CONNECTION ($env:USERNAME ?? $env:USER) ($env:COMPUTERNAME ?? (hostname)) |
+    fmtColor $pure._userColor
 
-  (&$pure.PrePrompt $formattedUser $formattedPwd $gitInfo $slowInfo ) +
+  (&$pure.PrePrompt $user $cwd $gitInfo $slowInfo ) +
   ($pure.PromptChar | fmtColor $promptColor) + " "
 }
