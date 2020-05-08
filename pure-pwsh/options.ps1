@@ -60,26 +60,24 @@
     $this | Add-Member -Name FetchInterval -MemberType ScriptProperty -Value {
       $this._fetchInterval
     } -SecondValue {
-      param($input)
+      param($value)
 
-      $value = ($input -is [Int])
-        ? [timespan]::FromSeconds($value)
-        : [timespan]$value
+      $timespan = ($value -is [Int]) ? [timespan]::FromSeconds($value) : [timespan]$value
 
-      if ($value -eq 0) {
+      if ($timespan -eq 0) {
         $Script:fetchTimer.Enabled = $false
-        $this._fetchInterval = $value
+        $this._fetchInterval = $timespan
         return
       }
 
-      if ($value -lt [timespan]::FromSeconds(30)) {
+      if ($timespan -lt [timespan]::FromSeconds(30)) {
         throw "Minimum fetch interval is 30s. (0 to disable.)"
       }
 
-      $Script:fetchTimer.Interval = $value.TotalMilliseconds
+      $Script:fetchTimer.Interval = $timespan.TotalMilliseconds
       $Script:fetchTimer.Enabled = $true
 
-      $this._fetchInterval = $value
+      $this._fetchInterval = $timespan
     }
 
     $this | Add-Member -Name PrePrompt -MemberType ScriptProperty -Value {
