@@ -3,8 +3,6 @@
 . $PSScriptRoot/prompt.ps1
 . $PSScriptRoot/options.ps1
 
-$Script:esc = [char]27
-
 initOptions
 
 function registerWatcherEvent($eventName) {

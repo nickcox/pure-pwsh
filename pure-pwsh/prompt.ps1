@@ -1,4 +1,4 @@
-filter fmtColor($color) { "$color$_$esc[0m" }
+filter fmtColor($color) { "$color$_`e[0m" }
 
 function global:prompt {
   $isError = !$?
@@ -42,10 +42,10 @@ function global:prompt {
     }
   }
 
-  $promptColor = if ($isError) { $pure._errorColor } else { $pure._promptColor }
+  $promptColor = ($isError) ? $pure._errorColor : $pure._promptColor
   $formattedPwd = &$pure.PwdFormatter $PWD.Path | fmtColor $pure._pwdColor
-  $formattedUser = 
-    &$pure.UserFormatter $env:SSH_CONNECTION $env:USERNAME ($env:COMPUTERNAME ?? $env:HOSTNAME) | fmtColor $pure._branchColor
+  $formattedUser =
+    &$pure.UserFormatter $env:SSH_CONNECTION ($env:USERNAME ?? $env:USER) ($env:COMPUTERNAME ?? (hostname)) | fmtColor $pure._branchColor
 
   (&$pure.PrePrompt $formattedUser $formattedPwd $gitInfo $slowInfo ) +
   ($pure.PromptChar | fmtColor $promptColor) + " "

@@ -16,7 +16,7 @@ $Script:OnIdleCallback = {
   $newStatus = &$pure._functions.getStatus $pure._state.repoDir
 
   if (Compare-Object $pure._state.status.values $newStatus.values) {
-    &$pure._functions.log "Prompt will update..."
+    &$pure._functions.log "Updating prompt.."
     $pure._state.status = $newStatus
 
     $isTest ? (&prompt) : [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
@@ -37,7 +37,7 @@ $Script:UpdateOnChange = {
 
 $Script:Fetch = {
   if ($pure._state.repoDir) {
-    &$pure._functions.log "git fetch"
+    &$pure._functions.log "Running git fetch"
     git -C $pure._state.repoDir fetch
   }
 }
