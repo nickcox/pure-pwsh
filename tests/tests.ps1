@@ -49,7 +49,7 @@ Describe 'pure-pwsh' {
 
         $pure._state.status.dirty | Should -Be $true
         $pure._state.status.branch | Should -Be 'No commits yet on master'
-        prompt | Should -Match 'No commits yet on master\*\W'
+        prompt | Should -Match 'No commits yet on master.*\*\W'
       }
 
       It 'does not show the dirty marker once the file is committed' {
