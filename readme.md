@@ -1,108 +1,158 @@
-# Note
-
-This beta is intended for use with PSReadLine v2.0-beta4 or later.
-You can check your version with something like:
-
-```try { $m = Get-Module psreadline; $m.Version.ToString(); $m.PrivateData.PSData.Prerelease } catch { }```
-
-Update with `Update-Module PSReadline -AllowPrerelease` if necessary.
-
 # pure-pwsh
 
-> PowerShell implementation of the [pure prompt](https://github.com/sindresorhus/pure).
+PowerShell implementation of the [pure prompt](https://github.com/sindresorhus/pure).
 
-![](screenshot.svg)
+Loads git status information asynchronously so that the prompt doesn't block and is able to update the prompt in
+response to file system changes without any user interation.
+
+![summary](./examples/summary.svg)
 
 ## Dependencies
 
 - Terminal with ANSI colour support
-  (e.g. any modern version of Windows 10, ConEmu, Hyper, ansicon, etc.)
-- PSReadLine for async prompt updates. Works best with PSReadLine 2.0.
+- PowerShell 7.0+
+- Git 2.0+ on your path
+
+
+## Installation
+
+Install from the [gallery](https://www.powershellgallery.com/packages/pure-pwsh) or clone this repository
+
+```shell
+Install-Module pure-pwsh
+```
+
+and import it in your profile. If you use this with _posh-git_ (e.g. for its excellent Git completion) then you'll
+probably want to import _pure-pwsh_ first so that _posh-git_ doesn't sepnd time configuring its own prompt.
+
+```shell
+# ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
+
+Import-Module pure-pwsh
+Import Module posh-git
+```
+
 
 ## Options
 
 Set options on the `$pure` global.
 
-| Option                | Description                               | Default value                                      |
-| :-------------------- | :---------------------------------------- | :------------------------------------------------- |
-| **`PwdColor`**        | Colour of the current directory name.     | <img src="https://placehold.it/18/0000aa?text=+"/> |
-| **`BranchColor`**     | Colour of the current branch name.        | <img src="https://placehold.it/18/aaaaaa?text=+"/> |
-| **`RemoteColor`**     | Colour of remote status (up/down arrows). | <img src="https://placehold.it/18/00aaaa?text=+"/> |
-| **`ErrorColor`**      | Colour of error prompt and slow commands. | <img src="https://placehold.it/18/aa0000?text=+"/> |
-| **`PromptColor`**     | Colour of the main prompt.                | <img src="https://placehold.it/18/aa00aa?text=+"/> |
-| **`PromptChar`**      | Prompt character.                         | `❯` (or `→` on PSReadLine < 2.0)                   |
-| **`UpChar`**          | Up arrow.                                 | `⇡` (or `↑` on PSReadLine < 2.0)                   |
-| **`DownChar`**        | Down arrow.                               | `⇣` (or `↓` on PSReadLine < 2.0)                   |
-| **`SlowCommandTime`** | Duration at which command is 'slow'.      | `00:05`                                            |
-| **`FetchInterval`**   | Period at which to fetch from remotes.    | `05:00`                                            |
-| **`BranchFormatter`** | Customize format of git branch name.      | `{ $args }`                                        |
-| **`PwdFormatter`**    | Customize format of working dir name.     | `{ param ($cwd) $cwd.Replace($HOME, '~') }`        |
-| **`PrePrompt`**       | Customize the line above the prompt.      | ``{ param ($cwd, $git, $slow) "`n$cwd $git $slow"`n }``|
-
-To customise the formatting of the current git branch or working directory, provide a function that
-transforms a string parameter into a string output. For example, this truncates the branch name by
-underscore delimited segments:
-
-```sh
-$pure.BranchFormatter = {
-     $args |% {
-       @(((($_ -split '_' | select -First 3) -join '_') + '…'), $_)
-     } | sort Length | select -First 1
-}
-```
-
-Similarly, you can customise the entire upper line by providing a function that transforms three string parameters
-(`$cwd`, `$git` and `$slow`) into a string output. For example, to include your username before the directory info:
-
-```sh
-$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$($pure._branchColor)$([Environment]::UserName) $cwd $git $slow`n"}
-```
-
-Or to put the entire prompt on one line, remove the `` `n `` at the end of the pre-prompt:
-
-```sh
-$pure.PrePrompt = {param ($cwd, $git, $slow) "`n$cwd $git $slow"}
-```
-
-Further customisations can be made, for example to colour your username you could combine it with an ANSI escape code:
-
-```sh
-myColours = @{ blue = "`e[38;5;31m" } # "$([char]27)[38;5;31m" on PowerShell < 6.0
-
-$pure.PrePrompt =
-  {param ($cwd, $git, $slow) "`n$($myColours.blue)$([Environment]::UserName) $cwd $git $slow"}
-```
-which colours the username [deep sky blue 3](https://jonasjacek.github.io/colors).
-
-## Installation
-
-Install from the [gallery](https://www.powershellgallery.com/packages/pure-pwsh) or clone this repository:
-
-```shell
-Install-Module pure-pwsh -AllowPrerelease
-```
-
-and import it in your profile. If you use this with `posh-git` (recommended for its excellent command completion)
-then you'll probably want to import `pure-pwsh` first so that `posh-git` doesn't waste time configuring the prompt.
-
-```shell
-Import-Module pure-pwsh
-```
+| Option                | Description                             | Default value                                      |
+| :-------------------- | :-------------------------------------- | :------------------------------------------------- |
+| **`PwdColor`**        | Current directory name colour           | <img src="https://placehold.it/18/0000aa?text=+"/> |
+| **`BranchColor`**     | Current branch name colour              | <img src="https://placehold.it/18/6c6c6c?text=+"/> |
+| **`DirtyColor`**      | Git dirty marker colour                 | <img src="https://placehold.it/18/ffafd7?text=+"/> |
+| **`RemoteColor`**     | Remote status colour (up/down arrows)   | <img src="https://placehold.it/18/00aaaa?text=+"/> |
+| **`ErrorColor`**      | Error prompt color                      | <img src="https://placehold.it/18/aa0000?text=+"/> |
+| **`PromptColor`**     | Colour of the main prompt               | <img src="https://placehold.it/18/aa00aa?text=+"/> |
+| **`TimeColor`**       | Colour used for command timings         | <img src="https://placehold.it/18/ffff00?text=+"/> |
+| **`UserColor`**       | Colour of user & hostname in SSH        | <img src="https://placehold.it/18/6c6c6c?text=+"/> |
+| **`SlowCommandTime`** | Duration at which command is 'slow'     | `00:05`                                            |
+| **`FetchInterval`**   | Interval at which to fetch from remotes | `05:00`                                            |
+| **`PromptChar`**      | Prompt character                        | `❯`                                                |
+| **`UpChar`**          | Up arrow                                | `⇡`                                                |
+| **`DownChar`**        | Down arrow                              | `⇣`                                                |
+| **`PendingChar`**     | Shown during git status update          | `⋯`                                                |
+| **`WindowTitle`**     | Customise the window title              | `{ $PWD.Path.Replace($HOME, '~')}`                 |
+| **`BranchFormatter`** | Customize format of git branch name     | `{ $args }`                                        |
+| **`PwdFormatter`**    | Customize format of working dir name    | `{ $PWD.Path.Replace($HOME, '~')}`                 |
+| **`PrePrompt`**       | Customize the line above the prompt     | `{ param ($user, $cwd, $git, $slow) … }`           |
 
 ## Compatibility
 
-The packaged dependencies are built for the Windows x64 platform. To build for an alternative platform,
-`cd` into the directory containing `PurePwsh.csproj` (i.e. `$env:PSModulePath/pure-pwsh/[version]/pure-pwsh`)
-and run:
+_pure-pwsh_ should work anywhere PowerShell 7 does, including Windows, Mac, and Linux. Due to a [longstanding bug
+](https://github.com/PowerShell/PSReadLine/issues/1092) in _PSReadLine_, async updates may not be scheduled on Mac and
+Linux until you interact with the console in some way.
 
-```shell
-dotnet publish -o bin -c Release -r [your-runtime] # https://docs.microsoft.com/en-us/dotnet/core/rid-catalog
-```
 
 ## Not currently included
 
-- Does not display username and host for remote sessions
-- Does not set window title
 - No vi mode indicator
+- No git stash indicator
+- No git action indicator (rebase, cherry pick, etc.)
+- No python virtual env indicator
 
-Consider [raising an issue](https://github.com/nickcox/pure-pwsh/issues/new) if you want any of the above.
+Consider [raising an issue](https://github.com/nickcox/pure-pwsh/issues/new) if you want any of the above, or use one
+of the recipes below.
+
+
+## Recipes
+
+### Shorten path segments
+
+Abbreviate each segment of the current path except for the leaf node.
+
+![abbreviated-path](./examples/abbreviated-path.svg)
+
+```
+$pure.PwdFormatter = {
+  (
+    ((Split-Path $pwd).Replace($HOME, '~').Split($pwd.Provider.ItemSeparator) |% {$_[0]}) +
+    (Split-Path -Leaf $pwd)
+  ) -join '/'
+}
+```
+
+
+### Truncate branch name
+
+Truncate the branch name to a maximum of 12 characters.
+
+![truncate branch](./examples/truncate-branch.svg)
+
+```sh
+$pure.BranchFormatter = {
+  param ($n)
+  $n.Length -lt 12 ? $n : ($n[0..11] -join '') + '…'
+}
+```
+
+
+### Show git stash indicator
+
+![stash indicator](./examples/stash-indicator.svg)
+
+```sh
+$pure.PrePrompt = {
+  param ($user, $cwd, $git, $slow)
+  "`n$user{0}$cwd $git{1}$slow `n" -f($user ? ' ' : ''), ((git stash list) ? ' ≡ ' : '')
+}
+```
+
+
+### Show Python virtual env
+
+![stash indicator](./examples/virtual-env.svg)
+
+```sh
+$pure.PrePrompt = {
+    param ($user, $cwd, $git, $slow)
+    "`n$user{1}{0}$cwd $git $slow `n" -f
+    ($user ? ' ' : ''),
+    (($ve = $env:virtual_env) ? "$($pure._branchcolor)($(Split-Path -Leaf $ve)) " : "" )
+}
+```
+
+### One line prompt
+
+![stash indicator](./examples/one-line.svg)
+
+```sh
+$pure.UserColor = '38;5;242;4'
+
+$pure.PrePrompt = {
+  param ($user, $cwd, $git, $slow)
+  $seperator = $pure._branchcolor +  " ❯ "
+  "`n$user{0}$cwd{1}$git$slow " -f
+    ($user ? $seperator : ''),
+    ($git ? $seperator : '')
+}
+```
+
+### Use a different colour for user and hostname parts
+
+![stash indicator](./examples/user-host.svg)
+
+```sh
+$pure.UserFormatter = { param ($ssh, $user, $hostname) $ssh ? "$user`e[32m@$hostname" : '' }
+```

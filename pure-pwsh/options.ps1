@@ -17,7 +17,7 @@
   hidden [string] $_timeColor = [Pure]::ansiSequence('33')
   hidden [string] $_userColor = [Pure]::ansiSequence('38;5;242')
   hidden [timespan] $_fetchInterval = [timespan]::FromMinutes(5)
-  hidden [timespan] $_slowCommandTime = [timespan]::FromSeconds(10)
+  hidden [timespan] $_slowCommandTime = [timespan]::FromSeconds(5)
   hidden [scriptblock] $_prePrompt = { param ($user, $cwd, $git, $slow) "`n$user{0}$cwd $git $slow `n" -f ($user ? ' ' : '') }
   hidden [hashtable] $_state = @{ isPending = $false; status = $emptyStatus; repoDir = '' }
   hidden [hashtable] $_functions = @{
@@ -87,7 +87,7 @@
       }
 
       $Script:fetchTimer.Interval = $timespan.TotalMilliseconds
-      $Script:fetchTimer.Enabled = $true
+      $Script:fetchTimer.Enabled = $pure._state.repoDir
 
       $this._fetchInterval = $timespan
     }
