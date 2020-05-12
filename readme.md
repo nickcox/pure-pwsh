@@ -29,7 +29,7 @@ probably want to import _pure-pwsh_ first so that _posh-git_ doesn't sepnd time 
 # ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
 
 Import-Module pure-pwsh
-Import Module posh-git
+Import-Module posh-git
 ```
 
 
