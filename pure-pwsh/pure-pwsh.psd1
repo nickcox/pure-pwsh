@@ -8,13 +8,10 @@
   Description       = 'pure prompt for powershell'
   PowerShellVersion = '7.0'
 
-  FunctionsToExport = 'Set-PureOption'
   VariablesToExport = 'pure'
-  AliasesToExport   = '*'
 
   PrivateData       = @{
     PSData = @{
-      Prerelease = 'beta1'
       Tags       = @('pure', 'prompt')
       LicenseUri = 'https://github.com/nickcox/pure-pwsh/blob/master/LICENSE'
       ProjectUri = 'https://github.com/nickcox/pure-pwsh'
