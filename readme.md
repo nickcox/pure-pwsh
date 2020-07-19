@@ -23,7 +23,7 @@ Install-Module pure-pwsh
 ```
 
 and import it in your profile. If you use this with _posh-git_ (e.g. for its excellent Git completion) then you'll
-probably want to import _pure-pwsh_ first so that _posh-git_ doesn't sepnd time configuring its own prompt.
+probably want to import _pure-pwsh_ first so that _posh-git_ doesn't spend time configuring its own prompt.
 
 ```shell
 # ~/Documents/PowerShell/Microsoft.PowerShell_profile.ps1
