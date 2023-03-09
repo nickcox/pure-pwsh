@@ -1,3 +1,5 @@
+$Script:UpdateJob = $null
+
 function UpdateStatus() {
   $pure._state.repoDir = GetRepoDir
 
@@ -5,7 +7,7 @@ function UpdateStatus() {
     $pure._state.isPending = $true
     &$pure._functions.log "Scheduling OnIdle event"
 
-    $null = Register-EngineEvent -SourceIdentifier PowerShell.OnIdle -MaxTriggerCount 1 -Action $OnIdleCallback
+    $Script:UpdateJob = Register-EngineEvent -SourceIdentifier PowerShell.OnIdle -MaxTriggerCount 1 -Action $Script:OnIdleCallback
   }
 }
 
@@ -22,6 +24,7 @@ $Script:OnIdleCallback = {
     $isTest ? (&prompt) : [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
   }
   $pure._state.isPending = $false
+  Remove-Job $Script:UpdateJob
 }
 
 $Script:UpdateOnChange = {

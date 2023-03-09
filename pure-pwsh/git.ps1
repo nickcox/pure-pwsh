@@ -2,8 +2,8 @@ $Script:emptyStatus = [Ordered] @{
   ahead   = $false
   behind  = $false
   dirty   = $false
-  branch  = $null
-  repoDir = $null
+  branch  = ""
+  repoDir = ""
 }
 
 function GetRepoDir() {
